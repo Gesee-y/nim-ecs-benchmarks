@@ -2,7 +2,13 @@
 
 A comprehensive performance benchmark suite for various Entity Component System (ECS) libraries in the Nim programming language. This project aims to provide objective, data-driven comparisons of entity lifecycle management, component mutations, and system iteration across different architectural approaches (Archetypes vs. Sparse Sets vs. Generative macros).
 
-## 🚀 Comparison Overview (10,000 Entities)
+## Benchmark setup
+
+- Intel core i7 4 core @2.8Ghz
+- 16Go RAM
+- Compiled with `nim c -r -d:danger`
+
+## Comparison Overview (10,000 Entities)
 
 The following table summarizes the mean execution times across all tested libraries.
 
@@ -19,7 +25,7 @@ The following table summarizes the mean execution times across all tested librar
 
 ---
 
-## 📊 Detailed Metric Explanations
+## Detailed Metric Explanations
 
 ### 1. Entity Creation
 Measures the time to spawn 10,000 entities with two standard components (`Position` and `Velocity`).
@@ -44,7 +50,7 @@ Measures the heap overhead introduced by the ECS when handling 10,000 entities.
 
 ---
 
-## 💡 Which one should I choose?
+## Which one should I choose?
 
 *   **For High-Performance Games/Simulations (RTS, Particles)**: Use **Cruise Dense**. Its archetype-based iteration is the fastest and most memory-stable.
 *   **For Gameplay-Heavy Projects (RPG, Immersive Sim)**: Use **Easyess**. It excels at frequent component mutations (status effects, equipment changes) with very low memory overhead.
@@ -53,18 +59,15 @@ Measures the heap overhead introduced by the ECS when handling 10,000 entities.
 
 ---
 
-## 🛠️ How to run benchmarks
+## How to run benchmarks
 
 Ensure you have Nim installed and the libraries located in the `libs/` folder.
 
 1.  **Clone the repository**.
-2.  **Compile a specific benchmark**:
+2.  **Compile and run a specific benchmark**:
     ```bash
-    nim c -d:release src/cruise_bench.nim
-    nim c -d:release src/easy_bench.nim
-    nim c -d:release -p:libs/polymorph/src src/poly_bench.nim
+    nim c -r -d:danger src/cr_dense.nim
+    nim c -r -d:danger src/easy_bench.nim
+    nim c -r -d:danger -p:libs/polymorph/src src/poly_bench.nim
     ```
-3.  **Run the executable**:
-    ```bash
-    ./src/cruise_bench
-    ```
+
