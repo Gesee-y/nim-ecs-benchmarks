@@ -1,10 +1,10 @@
 import times, math#, nimprof
-include "../../src/ecs/table.nim"
+include "../libs/CruiseECS/table.nim"
 
 # =========================
 # Benchmark template
 # =========================
-include "../../src/profile/benchmarks.nim"
+include "benchmarks.nim"
 
 const
   Samples = 1000
