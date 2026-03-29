@@ -9,6 +9,7 @@ include "benchmarks.nim"
 const
   Samples = 1000
   Warmup  = 1
+  ENTITY_COUNT = 10_000
 
 type
   Position = object
@@ -46,8 +47,6 @@ proc setupWorld(): ECSWorld =
 # ==============================
 # Benchmarks
 # ==============================
-
-const ENTITY_COUNT = 10_000
 
 # ---------------------------------
 # Entity creation
@@ -107,10 +106,11 @@ proc runSparseBenchmarks() =
     Warmup,
     (
       var w = setupWorld()
-      var e = w.createSparseEntity([Pos, Vel])
+      var node = w.archGraph.findArchetype([Pos, Vel])
+      var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, node)
     )
     ,
-    for i in 0..<ENTITY_COUNT:
+    for e in ents.mitems:
       w.deleteEntity(e)
   )
   showDetailed(suite.benchmarks[2])

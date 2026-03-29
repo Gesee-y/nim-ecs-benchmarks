@@ -69,7 +69,9 @@ proc prettyTime*(t: float): string =
   result = v.formatFloat(ffDecimal, 2) & " " & suffix
 
 proc prettyMem*(m: float): string =
-  if m < 1024:
+  if m < 0:
+    return "Neg B"
+  elif m < 1024:
     return m.formatFloat(ffDecimal, 2) & " B "
   elif m < 1024 * 1024:
     return (m / 1024).formatFloat(ffDecimal, 2) & " KB"
@@ -340,9 +342,9 @@ proc saveSummary*(suite: BenchmarkSuite, name: string) =
   var file = open(name & ".csv", fmWrite)
   defer: file.close()
 
-  file.writeLine(suite.name & ",time_median,mem_median")
+  file.writeLine(suite.name & ",time_mean,mem_median")
 
   for bench in suite.benchmarks:
-    let mem = prettyMem(bench.memStats.median)
-    let time = prettyTime(bench.timeStats.median)
+    let mem = prettyMem(bench.memStats.mean)
+    let time = prettyTime(bench.timeStats.mean)
     file.writeLine(bench.name & "," & time & "," & mem)
