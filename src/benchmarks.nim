@@ -2,7 +2,7 @@
 ######################################################## CRUISE PROFILER ###############################################################
 ########################################################################################################################################
 
-import times, math, algorithm, strutils, tables
+import times, math, algorithm, strutils, tables, unicode
 
 type
   Parameters* = object
@@ -324,9 +324,9 @@ proc add*(suite: var BenchmarkSuite, bench: Benchmark) =
 
 proc showSummary*(suite: BenchmarkSuite) =
   echo ""
-  echo "╔═", "═".repeat(68), "═╗"
-  echo "║ ", suite.name, " Operations", " ".repeat(max(0, 57 - suite.name.len)), "║"
-  echo "╠═", "═".repeat(68), "═╣"
+  echo "╔═", "═".repeat(60), "═╗"
+  echo "║ ", suite.name, " Operations", " ".repeat(max(0, 50 - suite.name.len)), "║"
+  echo "╠═", "═".repeat(60), "═╣"
 
   for bench in suite.benchmarks:
     let timeStr = prettyTime(bench.timeStats.median).alignLeft(12)
@@ -334,7 +334,7 @@ proc showSummary*(suite: BenchmarkSuite) =
     let nameStr = bench.name.alignLeft(30)
     echo "║ ", nameStr, " │ ", timeStr, " │ ", memStr, " ║"
 
-  echo "╚═", "═".repeat(68), "═╝"
+  echo "╚═", "═".repeat(60), "═╝"
 
 proc saveSummary*(suite: BenchmarkSuite, name: string) =
   var file = open(name & ".csv", fmWrite)

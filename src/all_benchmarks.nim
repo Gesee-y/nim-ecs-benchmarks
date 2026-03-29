@@ -18,13 +18,6 @@ let memColumnWidth = 9
 var comparisons = Table[string, Table[string, string]]()
 var suiteOrder: seq[string] = @[]
 
-proc alignUnicode(s: string, width: int, padding = ' '): string =
-  let visLen = s.runeLen
-  if visLen >= width:
-    s
-  else:
-    spaces(width - visLen) & s
-
 proc border(left: string, right: string, thickJoin: string, thinJoin: string, columnCount: int): string =
   let firstColumn = left & "═" & "═".repeat(firstColumnWidth) & "═" & thickJoin & "═"
   let column = "═".repeat(timeColumnWidth) & "═" & thinJoin & "═" & "═".repeat(memColumnWidth + 1)
