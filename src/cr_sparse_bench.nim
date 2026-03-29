@@ -122,12 +122,18 @@ proc runSparseBenchmarks() =
     "add component",
     Samples,
     Warmup,
-    (
+    ( 
       var w = setupWorld()
-      var e = w.createSparseEntity([Pos])),
-    for i in 0..<ENTITY_COUNT:
-      w.addComponent(e, Vel)
+      var ents = w.createSparseEntities(ENTITY_COUNT,[Pos])
+      var node = w.archGraph.findArchetype([Pos, Vel])
+      for e in ents.mitems:
+        w.addComponent(e, Vel)
+      for e in ents.mitems:
+        w.removeComponent(e, Vel)),
+    for e in ents.mitems:
+      w.migrateEntity(e, node)
   )
+
   showDetailed(suite.benchmarks[3])
 
   # ------------------------------
@@ -168,12 +174,18 @@ proc runSparseBenchmarks() =
     Warmup,
     (
       var w = setupWorld()
-      var e = w.createSparseEntity([Pos])),
-    block:
-      for i in 0..<ENTITY_COUNT:
+      var baseNode = w.archGraph.findArchetype([Pos])
+      var ents = w.createSparseEntities(ENTITY_COUNT,[Pos])
+      var node = w.archGraph.findArchetype([Pos, Vel])
+      for e in ents.mitems:
         w.addComponent(e, Vel)
-        w.removeComponent(e, Vel)
+      for e in ents.mitems:
+        w.removeComponent(e, Vel)),
+    for e in ents.mitems:
+      w.migrateEntity(e, node)
+      w.migrateEntity(e, baseNode)
   )
+
   showDetailed(suite.benchmarks[5])
 
   suite.add benchmarkWithSetup(
