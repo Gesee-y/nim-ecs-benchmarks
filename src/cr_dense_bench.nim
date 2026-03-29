@@ -62,13 +62,13 @@ proc setupWorldNoEnt(): ECSWorld =
 # ---------------------------------
 
 proc runDenseBenchmarks() =
-  var suite = initSuite("Sparse ECS Operations")
+  var suite = initSuite("Cruise Dense")
 
   # ------------------------------
   # Create single sparse entity
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "dense_create_entity",
+    "dense_create entity",
     SAMPLE,
     WARMUP,
     (
@@ -88,7 +88,7 @@ proc runDenseBenchmarks() =
   showDetailed(suite.benchmarks[0])
 
   suite.add benchmarkWithSetup(
-    "dense_create_entity_batch",
+    "dense_create entity_batch",
     SAMPLE,
     WARMUP,
     (

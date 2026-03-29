@@ -1,5 +1,5 @@
 import times, math, tables
-import ../libs/miniecs/miniecs
+import ../../vecs/src/vecs
 
 # =========================
 # Benchmark template
@@ -33,8 +33,8 @@ type
 # Benchmarks
 # =========================
 
-proc runMiniBenchmarks() =
-  var suite = initSuite("MiniECS")
+proc runVecsBenchmarks() =
+  var suite = initSuite("Vecs")
 
   # ------------------------------
   # Create entity
@@ -44,15 +44,12 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
-      var ents: seq[Entity]
+      var w = World()
+      var ents: seq[EntityId]
     ),
     (
       for i in 0..<ENTITY_COUNT:
-        var e = ecs.newEntity()
-        e.addComponent(Position(x: 1.0, y: 1.0))
-        e.addComponent(Velocity(x: 1.0, y: 1.0))
-        ents.add e
+        ents.add w.add((Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0)), Immediate)
     )
   )
   showDetailed(suite.benchmarks[0])
@@ -65,17 +62,14 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
-      var ents: seq[Entity]
+      var w = World()
+      var ents: seq[EntityId]
       for i in 0..<ENTITY_COUNT:
-        var e = ecs.newEntity()
-        e.addComponent(Position(x: 1.0, y: 1.0))
-        e.addComponent(Velocity(x: 1.0, y: 1.0))
-        ents.add e
+        ents.add w.add((Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0)), Immediate)
     ),
     (
-      for i in 0..<ENTITY_COUNT:
-        destroy(ents[i].getID(), ecs)
+      for e in ents:
+        w.remove(e, Immediate)
     )
   )
   showDetailed(suite.benchmarks[1])
@@ -88,14 +82,14 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
-      var ents: seq[Entity]
+      var w = World()
+      var ents: seq[EntityId]
       for i in 0..<ENTITY_COUNT:
-        ents.add ecs.newEntity()
+        ents.add w.add((Position(x: 1.0, y: 1.0),), Immediate)
     ),
     (
-      for i in 0..<ENTITY_COUNT:
-        addComponent(ents[i].getID(), Position(x: 1.0, y: 1.0), ecs)
+      for e in ents:
+        w.add(e, Velocity(x: 1.0, y: 1.0), Immediate)
     )
   )
   showDetailed(suite.benchmarks[2])
@@ -108,16 +102,14 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
-      var ents: seq[Entity]
+      var w = World()
+      var ents: seq[EntityId]
       for i in 0..<ENTITY_COUNT:
-        var e = ecs.newEntity()
-        e.addComponent(Position(x: 1.0, y: 1.0))
-        ents.add e
+        ents.add w.add((Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0)), Immediate)
     ),
     (
-      for i in 0..<ENTITY_COUNT:
-        removeComponent(ents[i].getID(), Position, ecs)
+      for e in ents:
+        w.remove(e, Velocity, Immediate)
     )
   )
   showDetailed(suite.benchmarks[3])
@@ -130,16 +122,15 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
-      var ents: seq[Entity]
+      var w = World()
+      var ents: seq[EntityId]
       for i in 0..<ENTITY_COUNT:
-        ents.add ecs.newEntity()
+        ents.add w.add((Position(x: 1.0, y: 1.0),), Immediate)
     ),
     (
-      for i in 0..<ENTITY_COUNT:
-        let id = ents[i].getID()
-        addComponent(id, Position(x: 1.0, y: 1.0), ecs)
-        removeComponent(id, Position, ecs)
+      for e in ents:
+        w.add(e, Velocity(x: 1.0, y: 1.0), Immediate)
+        w.remove(e, Velocity, Immediate)
     )
   )
   showDetailed(suite.benchmarks[4])
@@ -152,14 +143,13 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
+      var w = World()
       for i in 0..<ENTITY_COUNT:
-        var e = ecs.newEntity()
-        e.addComponent(Position(x: 1.0, y: 1.0))
-        e.addComponent(Velocity(x: 1.0, y: 1.0))
+        discard w.add((Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0)), Immediate)
+      var q: Query[(Write[Position], Velocity)]
     ),
     (
-      for id, pos, vel in ecs.allWith(Position, Velocity):
+      for (pos, vel) in w.query(q):
         pos.x += vel.x
         pos.y += vel.y
     )
@@ -175,16 +165,14 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
-      var ents: seq[Entity]
+      var w = World()
+      var ents: seq[EntityId]
       for i in 0..<ENTITY_COUNT:
-        var e = ecs.newEntity()
-        e.addComponent(Position(x: 1.0, y: 1.0))
-        ents.add e
+        ents.add w.add((Position(x: 1.0, y: 1.0),), Immediate)
     ),
     (
-      for i in 0..<ENTITY_COUNT:
-        s += getComponent(ents[i].getID(), Position, ecs).x
+      for e in ents:
+        s += w.read(e, Position).x
     )
   )
   showDetailed(suite.benchmarks[6])
@@ -197,22 +185,22 @@ proc runMiniBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      var ecs = newMiniECS()
-      var ents: seq[Entity]
+      var w = World()
+      var ents: seq[EntityId]
       for i in 0..<ENTITY_COUNT:
-        var e = ecs.newEntity()
-        e.addComponent(Position(x: 1.0, y: 1.0))
-        ents.add e
+        ents.add w.add((Position(x: 1.0, y: 1.0),), Immediate)
     ),
     (
-      for i in 0..<ENTITY_COUNT:
-        getComponent(ents[i].getID(), Position, ecs).x = s
+      for e in ents:
+        for pos in w.write(e, Position):
+          pos.x = s
+          pos.y = s
     )
   )
   showDetailed(suite.benchmarks[7])
 
   suite.showSummary()
-  suite.saveSummary("mini")
+  suite.saveSummary("vecs")
 
 if isMainModule:
-  runMiniBenchmarks()
+  runVecsBenchmarks()

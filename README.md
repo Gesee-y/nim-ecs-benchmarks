@@ -61,4 +61,7 @@ Ensure you have Nim installed and the libraries located in the `libs/` folder.
     nim c -r -d:danger src/easy_bench.nim
     nim c -r -d:danger -p:libs/polymorph/src src/poly_bench.nim
     ```
-
+3.  **Compile and run all benchmarks**:
+    ```bash
+    nim r src/all_benchmarks.nim
+    ```
