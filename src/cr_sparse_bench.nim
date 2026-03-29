@@ -54,13 +54,13 @@ const ENTITY_COUNT = 10_000
 # ---------------------------------
 
 proc runSparseBenchmarks() =
-  var suite = initSuite("Sparse ECS Operations")
+  var suite = initSuite("Cruise Sparse")
 
   # ------------------------------
   # Create single sparse entity
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "sparse_create_entity",
+    "create entity",
     Samples,
     Warmup,
     (
@@ -83,7 +83,7 @@ proc runSparseBenchmarks() =
   # Create sparse entities batch
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "sparse_create_entities_batch_1k",
+    "create entities batch 1k",
     Samples,
     Warmup,
     (
@@ -102,7 +102,7 @@ proc runSparseBenchmarks() =
   # Delete sparse entity
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "sparse_delete_entity",
+    "delete entity",
     Samples,
     Warmup,
     (
@@ -119,7 +119,7 @@ proc runSparseBenchmarks() =
   # Add component
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "sparse_add_component",
+    "add component",
     Samples,
     Warmup,
     (
@@ -134,7 +134,7 @@ proc runSparseBenchmarks() =
   # Add component batch
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "sparse_add_component_batch",
+    "add component batch",
     Samples,
     Warmup,
     (
@@ -148,7 +148,7 @@ proc runSparseBenchmarks() =
   # Remove component
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "sparse_remove_component",
+    "remove component",
     Samples,
     Warmup,
     (
@@ -163,7 +163,7 @@ proc runSparseBenchmarks() =
   # Add + Remove (stress mask ops)
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "sparse_add_remove_component",
+    "add remove component",
     Samples,
     Warmup,
     (
@@ -177,7 +177,7 @@ proc runSparseBenchmarks() =
   showDetailed(suite.benchmarks[5])
 
   suite.add benchmarkWithSetup(
-    "sparse_iterations",
+    "iteration",
     Samples,
     Warmup,
     (
@@ -202,7 +202,7 @@ proc runSparseBenchmarks() =
   
   var s = 0'f32
   suite.add benchmarkWithSetup(
-    "sparse_read",
+    "read",
     Samples,
     Warmup,
     (
@@ -217,7 +217,7 @@ proc runSparseBenchmarks() =
   showDetailed(suite.benchmarks[7])
 
   suite.add benchmarkWithSetup(
-    "sparse_write",
+    "write",
     Samples,
     Warmup,
     (
@@ -235,6 +235,7 @@ proc runSparseBenchmarks() =
   # Results
   # ==============================
   suite.showSummary()
+  suite.saveSummary("cr_sparse")
 
 # ==============================
 # Entry point

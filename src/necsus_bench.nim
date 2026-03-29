@@ -61,10 +61,10 @@ proc appRead() {.necsus([~createEntities, ~readSystem, ~exitAfterOne], newNecsus
 # =========================
 
 proc runNecsusBenchmarks() =
-  var suite = initSuite("Necsus ECS Operations")
+  var suite = initSuite("Necsus")
 
   suite.add benchmarkWithSetup(
-    "necsus_create_entity",
+    "create entity",
     SAMPLE,
     WARMUP,
     (discard),
@@ -76,7 +76,7 @@ proc runNecsusBenchmarks() =
 
   # 2. Iterate
   suite.add benchmarkWithSetup(
-    "necsus_iteration",
+    "iteration",
     SAMPLE,
     WARMUP,
     (discard),
@@ -88,7 +88,7 @@ proc runNecsusBenchmarks() =
 
   # 3. Delete
   suite.add benchmarkWithSetup(
-    "necsus_delete_entity",
+    "delete entity",
     SAMPLE,
     WARMUP,
     (discard),
@@ -100,7 +100,7 @@ proc runNecsusBenchmarks() =
 
   # 4. Read
   suite.add benchmarkWithSetup(
-    "necsus_read",
+    "read",
     SAMPLE,
     WARMUP,
     (discard),
@@ -113,6 +113,7 @@ proc runNecsusBenchmarks() =
   # But necsus IS the app.
 
   suite.showSummary()
+  suite.saveSummary("necsus")
 
 if isMainModule:
   runNecsusBenchmarks()

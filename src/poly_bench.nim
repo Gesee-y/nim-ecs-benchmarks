@@ -42,11 +42,11 @@ commitSystems "runMovement"
 # =========================
 
 proc runPolyBenchmarks() =
-  var suite = initSuite("Polymorph ECS Operations")
+  var suite = initSuite("Polymorph")
 
   # 1. Create Entity
   suite.add benchmarkWithSetup(
-    "poly_create_entity",
+    "create entity",
     SAMPLE,
     WARMUP,
     (
@@ -70,7 +70,7 @@ proc runPolyBenchmarks() =
 
   # 2. Delete Entity
   suite.add benchmarkWithSetup(
-    "poly_delete_entity",
+    "delete entity",
     SAMPLE,
     WARMUP,
     (
@@ -87,7 +87,7 @@ proc runPolyBenchmarks() =
 
   # 3. Add Component
   suite.add benchmarkWithSetup(
-    "poly_add_component",
+    "add component",
     SAMPLE,
     WARMUP,
     (
@@ -110,7 +110,7 @@ proc runPolyBenchmarks() =
 
   # 4. Remove Component
   suite.add benchmarkWithSetup(
-    "poly_remove_component",
+    "remove component",
     SAMPLE,
     WARMUP,
     (
@@ -130,7 +130,7 @@ proc runPolyBenchmarks() =
 
   # 5. Add + Remove Component
   suite.add benchmarkWithSetup(
-    "poly_add_remove_component",
+    "add remove component",
     SAMPLE,
     WARMUP,
     (
@@ -152,7 +152,7 @@ proc runPolyBenchmarks() =
   # 6. Iteration
   var entsIter: seq[EntityRef]
   suite.add benchmarkWithSetup(
-    "poly_iteration",
+    "iteration",
     SAMPLE,
     WARMUP,
     (
@@ -171,7 +171,7 @@ proc runPolyBenchmarks() =
   # 7. Read
   var s = 0'f32
   suite.add benchmarkWithSetup(
-    "poly_read",
+    "read",
     SAMPLE,
     WARMUP,
     (
@@ -188,7 +188,7 @@ proc runPolyBenchmarks() =
 
   # 8. Write
   suite.add benchmarkWithSetup(
-    "poly_write",
+    "write",
     SAMPLE,
     WARMUP,
     (
@@ -204,6 +204,7 @@ proc runPolyBenchmarks() =
   showDetailed(suite.benchmarks[7])
 
   suite.showSummary()
+  suite.saveSummary("poly")
 
 if isMainModule:
   runPolyBenchmarks()

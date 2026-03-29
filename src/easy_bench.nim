@@ -52,7 +52,7 @@ createECS(ECSConfig(maxEntities: 20000))
 # =========================
 
 proc runEasyBenchmarks() =
-  var suite = initSuite("Easyess ECS Operations")
+  var suite = initSuite("Easyess")
 
   # ------------------------------
   # Create entity
@@ -61,7 +61,7 @@ proc runEasyBenchmarks() =
   # But we can simulate it.
   
   suite.add benchmarkWithSetup(
-    "easy_create_entity",
+    "create entity",
     SAMPLE,
     WARMUP,
     (
@@ -82,7 +82,7 @@ proc runEasyBenchmarks() =
   # Delete entity
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "easy_delete_entity",
+    "delete entity",
     SAMPLE,
     WARMUP,
     (
@@ -105,7 +105,7 @@ proc runEasyBenchmarks() =
   # Add component
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "easy_add_component",
+    "add component",
     SAMPLE,
     WARMUP,
     (
@@ -127,7 +127,7 @@ proc runEasyBenchmarks() =
   # Remove component
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "easy_remove_component",
+    "remove component",
     SAMPLE,
     WARMUP,
     (
@@ -150,7 +150,7 @@ proc runEasyBenchmarks() =
   # Add + Remove component
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "easy_add_remove_component",
+    "add remove component",
     SAMPLE,
     WARMUP,
     (
@@ -173,7 +173,7 @@ proc runEasyBenchmarks() =
   # Iteration
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "easy_iteration",
+    "iteration",
     SAMPLE,
     WARMUP,
     (
@@ -194,7 +194,7 @@ proc runEasyBenchmarks() =
   # ------------------------------
   var s = 0'f32
   suite.add benchmarkWithSetup(
-    "easy_read",
+    "read",
     SAMPLE,
     WARMUP,
     (
@@ -216,7 +216,7 @@ proc runEasyBenchmarks() =
   # Write
   # ------------------------------
   suite.add benchmarkWithSetup(
-    "easy_write",
+    "write",
     SAMPLE,
     WARMUP,
     (
@@ -235,6 +235,7 @@ proc runEasyBenchmarks() =
   showDetailed(suite.benchmarks[7])
 
   suite.showSummary()
+  suite.saveSummary("easy")
 
 if isMainModule:
   runEasyBenchmarks()
