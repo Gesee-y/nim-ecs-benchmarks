@@ -9,7 +9,6 @@ type
     ckTag
     ckPayload
     ckOwned
-    ckTracked
 
   Position = object
     x, y: float32
@@ -24,11 +23,7 @@ type
     id: int
     token: ptr int
 
-  TracedPayload = object
-    id: int
-
 var destroyedTokens: seq[uint] = @[]
-var traceVisits = 0
 
 proc `=destroy`(x: HookTracker) =
   if x.token != nil:
@@ -43,22 +38,21 @@ proc `=wasMoved`(x: var HookTracker) =
 
 proc `=copy`(dest: var HookTracker; src: HookTracker) {.error.}
 
-proc `=trace`(x: var TracedPayload; env: pointer) =
-  inc traceVisits
-
 proc makeHookTracker(id: int): HookTracker =
   result = HookTracker(id: id, token: nil)
   result.token = cast[ptr int](alloc(sizeof(int)))
   result.token[] = id
 
+proc initWorld(capacity = 16): PirataWorld[ComponentKind] =
+  result = newPirata[ComponentKind](capacity)
+  result.register(ckPosition, Position)
+  result.register(ckVelocity, Velocity)
+  result.registerTag(ckTag)
+  result.register(ckPayload, Payload)
+  result.register(ckOwned, HookTracker)
+
 proc verifyBasicWorldFlow() =
-  var world = newPirata[ComponentKind](16)
-  world.register(ckPosition, Position)
-  world.register(ckVelocity, Velocity)
-  world.registerTag(ckTag)
-  world.register(ckPayload, Payload)
-  world.register(ckOwned, HookTracker)
-  world.register(ckTracked, TracedPayload)
+  var world = initWorld()
 
   let first = world.spawn()
   doAssert world.contains(first)
@@ -107,39 +101,50 @@ proc verifyBasicWorldFlow() =
   doAssert position.x == 5
   doAssert position.y == 6
 
-proc verifyOwnedComponentCleanup() =
+proc verifyDeferredOwnedCleanup() =
   destroyedTokens.setLen(0)
-  var ownedWorld = newPirata[ComponentKind](8)
-  ownedWorld.register(ckOwned, HookTracker)
-  let keptEntity = ownedWorld.spawn()
-  let removedEntity = ownedWorld.spawn()
-  ownedWorld.add(keptEntity, ckOwned, makeHookTracker(10))
-  ownedWorld.add(removedEntity, ckOwned, makeHookTracker(20))
-  doAssert ownedWorld.fetch(keptEntity, ckOwned, HookTracker).id == 10
-  ownedWorld.remove(keptEntity, ckOwned)
-  ownedWorld.destroy(removedEntity)
+  block:
+    var ownedWorld = initWorld(8)
+    let keptEntity = ownedWorld.spawn()
+    let removedEntity = ownedWorld.spawn()
+    ownedWorld.add(keptEntity, ckOwned, makeHookTracker(10))
+    ownedWorld.add(removedEntity, ckOwned, makeHookTracker(20))
+    doAssert ownedWorld.fetch(keptEntity, ckOwned, HookTracker).id == 10
+    ownedWorld.remove(keptEntity, ckOwned)
+    ownedWorld.destroy(removedEntity)
+    doAssert destroyedTokens.len == 0
   doAssert destroyedTokens.len == 2
 
-proc verifyTracing() =
-  traceVisits = 0
-  var tracedWorld = newPirata[ComponentKind](8)
-  tracedWorld.register(ckTracked, TracedPayload)
-  tracedWorld.register(ckPosition, Position)
-  let firstTrackedEntity = tracedWorld.spawn()
-  let secondTrackedEntity = tracedWorld.spawn()
-  let plainEntity = tracedWorld.spawn()
-  tracedWorld.add(firstTrackedEntity, ckTracked, TracedPayload(id: 1))
-  tracedWorld.add(secondTrackedEntity, ckTracked, TracedPayload(id: 2))
-  tracedWorld.add(plainEntity, ckPosition, Position(x: 0, y: 0))
-  tracedWorld.remove(secondTrackedEntity, ckTracked)
-  var traceEnv: pointer = nil
-  `=trace`(tracedWorld, traceEnv)
-  doAssert traceVisits == 1
+  destroyedTokens.setLen(0)
+  block:
+    var world = initWorld(4)
+    let first = world.spawn()
+    world.add(first, ckOwned, makeHookTracker(10))
+    world.destroy(first)
+    doAssert destroyedTokens.len == 0
+
+    let recycled = world.spawn()
+    doAssert recycled.idx == first.idx
+    world.add(recycled, ckOwned, makeHookTracker(20))
+    doAssert destroyedTokens.len == 1
+    doAssert world.fetch(recycled, ckOwned, HookTracker).id == 20
+  doAssert destroyedTokens.len == 2
+
+proc verifyOwnedComponentOverwrite() =
+  destroyedTokens.setLen(0)
+  block:
+    var world = initWorld(4)
+    let entity = world.spawn()
+    world.add(entity, ckOwned, makeHookTracker(1))
+    world.add(entity, ckOwned, makeHookTracker(2))
+    doAssert destroyedTokens.len == 1
+    doAssert world.fetch(entity, ckOwned, HookTracker).id == 2
+  doAssert destroyedTokens.len == 2
 
 proc main() =
   verifyBasicWorldFlow()
-  verifyOwnedComponentCleanup()
-  verifyTracing()
+  verifyDeferredOwnedCleanup()
+  verifyOwnedComponentOverwrite()
 
 when isMainModule:
   main()
