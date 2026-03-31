@@ -65,15 +65,14 @@ proc runSparseBenchmarks() =
     (
       var w = setupWorld()
       var ents:seq[SparseHandle]
-      var node = w.archGraph.findArchetype([Pos, Vel])
       for i in 0..<ENTITY_COUNT:
-        ents.add w.createSparseEntity(node)
+        ents.add w.createSparseEntity(Position, Velocity)
       for e in ents.mitems:
         w.deleteEntity(e)
     ),
     (
       for i in 0..<ENTITY_COUNT:
-        discard w.createSparseEntity(node)
+        discard w.createSparseEntity(Position, Velocity)
     )
   )
   showDetailed(suite.benchmarks[0])
@@ -87,13 +86,12 @@ proc runSparseBenchmarks() =
     Warmup,
     (
       var w = setupWorld()
-      var node = w.archGraph.findArchetype([Pos, Vel])
-      var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, node)
+      var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, Position, Velocity)
       
       for e in ents.mitems:
         w.deleteEntity(e)
     ),
-    (discard w.createSparseEntities(ENTITY_COUNT, node))
+    (discard w.createSparseEntities(ENTITY_COUNT, Position, Velocity))
   )
   showDetailed(suite.benchmarks[1])
 
@@ -106,8 +104,7 @@ proc runSparseBenchmarks() =
     Warmup,
     (
       var w = setupWorld()
-      var node = w.archGraph.findArchetype([Pos, Vel])
-      var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, node)
+      var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, Position, Velocity)
     )
     ,
     for e in ents.mitems:
@@ -124,14 +121,13 @@ proc runSparseBenchmarks() =
     Warmup,
     ( 
       var w = setupWorld()
-      var ents = w.createSparseEntities(ENTITY_COUNT,[Pos])
-      var node = w.archGraph.findArchetype([Pos, Vel])
+      var ents = w.createSparseEntities(ENTITY_COUNT,Position)
       for e in ents.mitems:
-        w.addComponent(e, Vel)
+        w.addComponent(e, Velocity)
       for e in ents.mitems:
-        w.removeComponent(e, Vel)),
+        w.removeComponent(e, Velocity)),
     for e in ents.mitems:
-      w.migrateEntity(e, node)
+      w.addComponent(e, Velocity)
   )
 
   showDetailed(suite.benchmarks[3])
@@ -145,8 +141,8 @@ proc runSparseBenchmarks() =
     Warmup,
     (
       var w = setupWorld()
-      var ents = w.createSparseEntities(ENTITY_COUNT, [Pos])),
-    w.addComponentBatch(ents, Vel)
+      var ents = w.createSparseEntities(ENTITY_COUNT, Position)),
+    w.addComponent(ents, Velocity)
   )
   showDetailed(suite.benchmarks[suite.benchmarks.len-1])
 
@@ -159,9 +155,9 @@ proc runSparseBenchmarks() =
     Warmup,
     (
       var w = setupWorld()
-      var e = w.createSparseEntity([Pos, Vel])),
+      var e = w.createSparseEntity(Position, Velocity)),
     for i in 0..<ENTITY_COUNT:
-      w.removeComponent(e, Vel)
+      w.removeComponent(e, Velocity)
   )
   showDetailed(suite.benchmarks[4])
 
@@ -174,16 +170,14 @@ proc runSparseBenchmarks() =
     Warmup,
     (
       var w = setupWorld()
-      var baseNode = w.archGraph.findArchetype([Pos])
-      var ents = w.createSparseEntities(ENTITY_COUNT,[Pos])
-      var node = w.archGraph.findArchetype([Pos, Vel])
+      var ents = w.createSparseEntities(ENTITY_COUNT,Position)
       for e in ents.mitems:
-        w.addComponent(e, Vel)
+        w.addComponent(e, Velocity)
       for e in ents.mitems:
-        w.removeComponent(e, Vel)),
+        w.removeComponent(e, Velocity)),
     for e in ents.mitems:
-      w.migrateEntity(e, node)
-      w.migrateEntity(e, baseNode)
+      w.addComponent(e, Velocity)
+      w.removeComponent(e, Velocity),
   )
 
   showDetailed(suite.benchmarks[5])
@@ -196,7 +190,7 @@ proc runSparseBenchmarks() =
       var w = setupWorld()
       var posc = w.get(Position)
       var velc = w.get(Velocity)
-      discard w.createSparseEntities(ENTITY_COUNT, [Pos, Vel])),
+      discard w.createSparseEntities(ENTITY_COUNT, Position, Velocity)),
     (
       for (sid, r) in w.sparseQuery(query(w, Position and Velocity)):
         let bid = posc.toSparse[sid]-1
@@ -220,7 +214,7 @@ proc runSparseBenchmarks() =
     (
       var w = setupWorld()
       var posc = w.get(Position)
-      var ents = w.createSparseEntities(ENTITY_COUNT, [Pos])),
+      var ents = w.createSparseEntities(ENTITY_COUNT, Position)),
     (
       for e in ents:
         s += posc[e].x
@@ -235,7 +229,7 @@ proc runSparseBenchmarks() =
     (
       var w = setupWorld()
       var posc = w.get(Position)
-      var ents = w.createSparseEntities(ENTITY_COUNT, [Pos])),
+      var ents = w.createSparseEntities(ENTITY_COUNT, Position)),
     (
       for e in ents:
         posc[e] = Position()
