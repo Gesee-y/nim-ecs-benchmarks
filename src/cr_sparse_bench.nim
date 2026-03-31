@@ -93,7 +93,7 @@ proc runSparseBenchmarks() =
 
   var ss = 0
   suite.add benchmarkWithSetup(
-    "heterogeneous iteration",
+    "heterogeneous iter",
     Samples,
     WARMUP,
     (
@@ -157,7 +157,7 @@ proc runSparseBenchmarks() =
         discard w.createSparseEntity(Position, Velocity)
     )
   )
-  showDetailed(susuite.benchmarks[^1]0])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Create sparse entities batch
@@ -226,7 +226,7 @@ proc runSparseBenchmarks() =
       var ents = w.createSparseEntities(ENTITY_COUNT, Position)),
     w.addComponent(ents, Velocity)
   )
-  showDetailed(suite.benchmarks[^1]ite.benchmarks.len-1])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Remove component

@@ -7,6 +7,7 @@ let metrics = @[
   "remove component",
   "add remove component",
   "iteration",
+  "heterogeneous iter",
   "read",
   "write"
 ]

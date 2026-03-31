@@ -102,7 +102,7 @@ proc runPirataBenchmarks() =
 
   var sHetero = 0.0
   suite.add benchmarkWithSetup(
-    "heterogeneous iteration",
+    "heterogeneous iter",
     sample,
     warmup,
     (

@@ -1,4 +1,4 @@
-import times, math, tables
+import times, math, tables, random
 import ../libs/easyess/src/easyess
 
 # =========================
@@ -6,7 +6,7 @@ import ../libs/easyess/src/easyess
 # =========================
 include "benchmarks.nim"
 
-const SAMPLE = 10000
+const SAMPLE = 1000
 const WARMUP = 1
 const ENTITY_COUNT = 10000
 const SELECTION_THRESHOLD = 0.1
@@ -30,6 +30,26 @@ comp:
 
     Health = object
       hp: int
+
+    Rotation = object
+      angle: float32
+    Scale = object
+      sx, sy: float32
+    Mass = object
+      value: float32
+    Force = object
+      fx, fy: float32
+    Torque = object
+      value: float32
+    Energy = object
+      value: float32
+    Friction = object
+      coef: float32
+
+sys [Position, Velocity], "movementHetero":
+  proc moveHeteroSystem(item: Item) =
+    position.x += velocity.x
+    position.y += velocity.y
 
 # =========================
 # Systems
@@ -77,7 +97,7 @@ proc runEasyBenchmarks() =
         ents.add e
     )
   )
-  showDetailed(susuite.benchmarks[^1]0])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Delete entity
@@ -231,6 +251,37 @@ proc runEasyBenchmarks() =
     (
       for e in ents:
         (ecs, e).position = Position(x: s, y: s)
+    )
+  )
+  showDetailed(suite.benchmarks[^1])
+
+  var rng = initRand(42)
+
+  suite.add benchmarkWithSetup(
+  "heterogeneous iter",
+  SAMPLE,
+  WARMUP,
+  (
+    var ecs = newECS()
+    for i in 0..<ENTITY_COUNT:
+      let e = ecs.newEntity("bench")
+      for j in 0..<10:
+        if rng.rand(1.0) < SELECTION_THRESHOLD:
+          case j
+          of 0: (ecs, e).addPosition(Position(x: 1.0, y: 1.0))
+          of 1: (ecs, e).addVelocity(Velocity(x: 1.0, y: 1.0))
+          of 2: (ecs, e).addAcceleration(Acceleration(x: 1.0, y: 1.0))
+          of 3: (ecs, e).addRotation(Rotation(angle: 0.5))
+          of 4: (ecs, e).addScale(Scale(sx: 1.0, sy: 1.0))
+          of 5: (ecs, e).addMass(Mass(value: 1.0))
+          of 6: (ecs, e).addForce(Force(fx: 1.0, fy: 1.0))
+          of 7: (ecs, e).addTorque(Torque(value: 1.0))
+          of 8: (ecs, e).addEnergy(Energy(value: 1.0))
+          of 9: (ecs, e).addFriction(Friction(coef: 0.5))
+          else: discard
+    ),
+    (
+      ecs.runMovementHetero()
     )
   )
   showDetailed(suite.benchmarks[^1])

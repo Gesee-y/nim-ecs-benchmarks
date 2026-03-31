@@ -213,7 +213,7 @@ proc runDenseBenchmarks() =
 
   var ss = 0
   suite.add benchmarkWithSetup(
-    "heterogeneous iteration",
+    "heterogeneous iter",
     SAMPLE,
     WARMUP,
     (

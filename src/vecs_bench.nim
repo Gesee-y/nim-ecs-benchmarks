@@ -1,4 +1,4 @@
-import times, math, tables
+import times, math, tables, random
 import ../../vecs/src/vecs
 
 # =========================
@@ -9,6 +9,7 @@ include "benchmarks.nim"
 const SAMPLE = 1000
 const WARMUP = 1
 const ENTITY_COUNT = 10000
+const SELECTION_THRESHOLD = 0.1
 
 # =========================
 # Components
@@ -28,6 +29,21 @@ type
 
   Health = object
     hp: int
+
+  Rotation = object
+    angle: float32
+  Scale = object
+    sx, sy: float32
+  Mass = object
+    value: float32
+  Force = object
+    fx, fy: float32
+  Torque = object
+    value: float32
+  Energy = object
+    value: float32
+  Friction = object
+    coef: float32
 
 # =========================
 # Benchmarks
@@ -198,6 +214,39 @@ proc runVecsBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[7])
+
+  var rng = initRand(42)
+  suite.add benchmarkWithSetup(
+    "heterogeneous iter",
+    SAMPLE,
+    WARMUP,
+    (
+      var w = World()
+      for i in 0..<ENTITY_COUNT:
+        let e = w.add((), Immediate)
+        for j in 0..<10:
+          if rng.rand(1.0) < SELECTION_THRESHOLD:
+            case j
+            of 0: w.add(e, Position(x: 1.0, y: 1.0), Immediate)
+            of 1: w.add(e, Velocity(x: 1.0, y: 1.0), Immediate)
+            of 2: w.add(e, Acceleration(x: 1.0, y: 1.0), Immediate)
+            of 3: w.add(e, Rotation(angle: 0.5), Immediate)
+            of 4: w.add(e, Scale(sx: 1.0, sy: 1.0), Immediate)
+            of 5: w.add(e, Mass(value: 1.0), Immediate)
+            of 6: w.add(e, Force(fx: 1.0, fy: 1.0), Immediate)
+            of 7: w.add(e, Torque(value: 1.0), Immediate)
+            of 8: w.add(e, Energy(value: 1.0), Immediate)
+            of 9: w.add(e, Friction(coef: 0.5), Immediate)
+            else: discard
+      var q: Query[(Write[Position], Velocity)]
+    ),
+    (
+      for (pos, vel) in w.query(q):
+        pos.x += vel.x
+        pos.y += vel.y
+    )
+  )
+  showDetailed(suite.benchmarks[^1])
 
   suite.showSummary()
   suite.saveSummary("vecs")
