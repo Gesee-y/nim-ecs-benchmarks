@@ -9,6 +9,7 @@ include "benchmarks.nim"
 const SAMPLE = 1000
 const WARMUP = 1
 const ENTITY_COUNT = 10000
+const SELECTION_THRESHOLD = 0.1
 
 # =========================
 # Components
@@ -66,7 +67,7 @@ proc runPolyBenchmarks() =
       ents.setLen(0)
     )
   )
-  showDetailed(suite.benchmarks[0])
+  showDetailed(suite.benchmarks[^1])
 
   # 2. Delete Entity
   suite.add benchmarkWithSetup(
@@ -83,7 +84,7 @@ proc runPolyBenchmarks() =
         e.delete()
     )
   )
-  showDetailed(suite.benchmarks[1])
+  showDetailed(suite.benchmarks[^1])
 
   # 3. Add Component
   suite.add benchmarkWithSetup(
@@ -106,7 +107,7 @@ proc runPolyBenchmarks() =
       ents.setLen(0)
     )
   )
-  showDetailed(suite.benchmarks[2])
+  showDetailed(suite.benchmarks[^1])
 
   # 4. Remove Component
   suite.add benchmarkWithSetup(
@@ -126,7 +127,7 @@ proc runPolyBenchmarks() =
       ents.setLen(0)
     )
   )
-  showDetailed(suite.benchmarks[3])
+  showDetailed(suite.benchmarks[^1])
 
   # 5. Add + Remove Component
   suite.add benchmarkWithSetup(
@@ -147,7 +148,7 @@ proc runPolyBenchmarks() =
       ents.setLen(0)
     )
   )
-  showDetailed(suite.benchmarks[4])
+  showDetailed(suite.benchmarks[^1])
 
   # 6. Iteration
   var entsIter: seq[EntityRef]
@@ -166,7 +167,7 @@ proc runPolyBenchmarks() =
       runMovement()
     )
   )
-  showDetailed(suite.benchmarks[5])
+  showDetailed(suite.benchmarks[^1])
 
   # 7. Read
   var s = 0'f32
@@ -184,7 +185,7 @@ proc runPolyBenchmarks() =
         s += e.fetchComponent(Position).x
     )
   )
-  showDetailed(suite.benchmarks[6])
+  showDetailed(suite.benchmarks[^1])
 
   # 8. Write
   suite.add benchmarkWithSetup(
@@ -201,7 +202,7 @@ proc runPolyBenchmarks() =
         e.fetchComponent(Position).x = s
     )
   )
-  showDetailed(suite.benchmarks[7])
+  showDetailed(suite.benchmarks[^1])
 
   suite.showSummary()
   suite.saveSummary("poly")

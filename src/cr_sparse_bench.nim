@@ -1,4 +1,4 @@
-import times, math#, nimprof
+import times, math, random#, nimprof
 include "../libs/CruiseECS/table.nim"
 
 # =========================
@@ -8,8 +8,9 @@ include "benchmarks.nim"
 
 const
   Samples = 1000
-  Warmup  = 1
+  Warmup  = 0
   ENTITY_COUNT = 10_000
+  SELECTION_THRESHOLD = 0.1
 
 type
   Position = object
@@ -24,6 +25,26 @@ type
   Heal = object
     hp:int
 
+  Rotation = object
+    angle: float32
+
+  Scale = object
+    sx, sy: float32
+
+  Mass = object
+    value: float32
+
+  Friction = object
+    coeff: float32
+
+  Bounce = object
+    factor: float32
+
+  Lifetime = object
+    remaining: float32
+
+  Energy = object
+    value: float32
 let
   Pos = 0
   Vel = 1
@@ -44,6 +65,21 @@ proc setupWorld(): ECSWorld =
 
   return world
 
+proc setupWorldHetero(): ECSWorld =
+  var world = newECSWorld()
+  discard world.registerComponent(Position)
+  discard world.registerComponent(Velocity)
+  discard world.registerComponent(Acceleration)
+  discard world.registerComponent(Rotation)
+  discard world.registerComponent(Scale)
+  discard world.registerComponent(Mass)
+  discard world.registerComponent(Friction)
+  discard world.registerComponent(Bounce)
+  discard world.registerComponent(Lifetime)
+  discard world.registerComponent(Energy)
+  return world
+
+
 # ==============================
 # Benchmarks
 # ==============================
@@ -55,6 +91,52 @@ proc setupWorld(): ECSWorld =
 proc runSparseBenchmarks() =
   var suite = initSuite("Cruise Sparse")
 
+  var ss = 0
+  suite.add benchmarkWithSetup(
+    "heterogeneous iteration",
+    Samples,
+    WARMUP,
+    (
+      var w = setupWorldHetero()
+      var rng = initRand(42)
+
+      var ents: seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT)
+
+      for e in ents.mitems:
+        for i in 0..<10:
+          if rng.rand(1.0) < SELECTION_THRESHOLD:
+            case i
+              of 0: w.addComponent(e, Position)
+              of 1: w.addComponent(e, Velocity)
+              of 2: w.addComponent(e, Acceleration)
+              of 3: w.addComponent(e, Rotation)
+              of 4: w.addComponent(e, Scale)
+              of 5: w.addComponent(e, Mass)
+              of 6: w.addComponent(e, Friction)
+              of 7: w.addComponent(e, Bounce)
+              of 8: w.addComponent(e, Lifetime)
+              of 9: w.addComponent(e, Energy)
+              else: discard
+
+      var posc = w.get(Position)
+      let velc = w.get(Velocity)
+    ),
+    (
+      for (sid, r) in w.sparseQuery(query(w, Position and Velocity)):
+        let bid = posc.toSparse[sid]-1
+        var x = addr posc.sparse[bid].data.x
+        let dx = addr velc.sparse[bid].data.x
+        var y = addr posc.sparse[bid].data.y
+        let dy = addr velc.sparse[bid].data.y
+
+        for i in r:
+          x[i] += dx[i]
+          y[i] += dy[i]
+          ss += 1
+    )
+  )
+  showDetailed(suite.benchmarks[^1])
+  echo ss
   # ------------------------------
   # Create single sparse entity
   # ------------------------------
@@ -75,7 +157,7 @@ proc runSparseBenchmarks() =
         discard w.createSparseEntity(Position, Velocity)
     )
   )
-  showDetailed(suite.benchmarks[0])
+  showDetailed(susuite.benchmarks[^1]0])
 
   # ------------------------------
   # Create sparse entities batch
@@ -93,7 +175,7 @@ proc runSparseBenchmarks() =
     ),
     (discard w.createSparseEntities(ENTITY_COUNT, Position, Velocity))
   )
-  showDetailed(suite.benchmarks[1])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Delete sparse entity
@@ -110,7 +192,7 @@ proc runSparseBenchmarks() =
     for e in ents.mitems:
       w.deleteEntity(e)
   )
-  showDetailed(suite.benchmarks[2])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Add component
@@ -130,7 +212,7 @@ proc runSparseBenchmarks() =
       w.addComponent(e, Velocity)
   )
 
-  showDetailed(suite.benchmarks[3])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Add component batch
@@ -144,7 +226,7 @@ proc runSparseBenchmarks() =
       var ents = w.createSparseEntities(ENTITY_COUNT, Position)),
     w.addComponent(ents, Velocity)
   )
-  showDetailed(suite.benchmarks[suite.benchmarks.len-1])
+  showDetailed(suite.benchmarks[^1]ite.benchmarks.len-1])
 
   # ------------------------------
   # Remove component
@@ -159,7 +241,7 @@ proc runSparseBenchmarks() =
     for i in 0..<ENTITY_COUNT:
       w.removeComponent(e, Velocity)
   )
-  showDetailed(suite.benchmarks[4])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Add + Remove (stress mask ops)
@@ -180,7 +262,7 @@ proc runSparseBenchmarks() =
       w.removeComponent(e, Velocity),
   )
 
-  showDetailed(suite.benchmarks[5])
+  showDetailed(suite.benchmarks[^1])
 
   suite.add benchmarkWithSetup(
     "iteration",
@@ -204,7 +286,7 @@ proc runSparseBenchmarks() =
           posby[i] += velby[i]+1
     )
   )
-  showDetailed(suite.benchmarks[6])
+  showDetailed(suite.benchmarks[^1])
   
   var s = 0'f32
   suite.add benchmarkWithSetup(
@@ -220,7 +302,7 @@ proc runSparseBenchmarks() =
         s += posc[e].x
     )
   )
-  showDetailed(suite.benchmarks[7])
+  showDetailed(suite.benchmarks[^1])
 
   suite.add benchmarkWithSetup(
     "write",
@@ -235,7 +317,7 @@ proc runSparseBenchmarks() =
         posc[e] = Position()
     )
   )
-  showDetailed(suite.benchmarks[8])
+  showDetailed(suite.benchmarks[^1])
 
   # ==============================
   # Results

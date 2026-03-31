@@ -6,9 +6,10 @@ import ../libs/easyess/src/easyess
 # =========================
 include "benchmarks.nim"
 
-const SAMPLE = 1000
+const SAMPLE = 10000
 const WARMUP = 1
 const ENTITY_COUNT = 10000
+const SELECTION_THRESHOLD = 0.1
 
 # =========================
 # Components
@@ -76,7 +77,7 @@ proc runEasyBenchmarks() =
         ents.add e
     )
   )
-  showDetailed(suite.benchmarks[0])
+  showDetailed(susuite.benchmarks[^1]0])
 
   # ------------------------------
   # Delete entity
@@ -99,7 +100,7 @@ proc runEasyBenchmarks() =
         ecs.removeEntity(e)
     )
   )
-  showDetailed(suite.benchmarks[1])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Add component
@@ -121,7 +122,7 @@ proc runEasyBenchmarks() =
         (ecs, e).addComponent(Velocity(x: 1.0, y: 1.0))
     )
   )
-  showDetailed(suite.benchmarks[2])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Remove component
@@ -144,7 +145,7 @@ proc runEasyBenchmarks() =
         (ecs, e).removeComponent(Velocity)
     )
   )
-  showDetailed(suite.benchmarks[3])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Add + Remove component
@@ -167,7 +168,7 @@ proc runEasyBenchmarks() =
         (ecs, e).removeComponent(Velocity)
     )
   )
-  showDetailed(suite.benchmarks[4])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Iteration
@@ -187,7 +188,7 @@ proc runEasyBenchmarks() =
       ecs.runMovement()
     )
   )
-  showDetailed(suite.benchmarks[5])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Read
@@ -210,7 +211,7 @@ proc runEasyBenchmarks() =
         s += (ecs, e).position.x
     )
   )
-  showDetailed(suite.benchmarks[6])
+  showDetailed(suite.benchmarks[^1])
 
   # ------------------------------
   # Write
@@ -232,7 +233,7 @@ proc runEasyBenchmarks() =
         (ecs, e).position = Position(x: s, y: s)
     )
   )
-  showDetailed(suite.benchmarks[7])
+  showDetailed(suite.benchmarks[^1])
 
   suite.showSummary()
   suite.saveSummary("easy")
