@@ -140,6 +140,36 @@ proc runDenseBenchmarks() =
   )
   showDetailed(suite.benchmarks[^1])
 
+  suite.add benchmarkWithSetup(
+    "rand create ents",
+    SAMPLE,
+    WARMUP,
+    (
+      var w = setupWorldHetero()
+      var rng = initRand(42)
+
+      var ents: seq[DenseHandle] = w.createEntities(ENTITY_COUNT)
+
+      let optional = [
+        Position.toComponentId,
+        Velocity.toComponentId,
+        Acceleration.toComponentId,
+        Rotation.toComponentId,
+        Scale.toComponentId,
+        Mass.toComponentId,
+        Friction.toComponentId,
+        Bounce.toComponentId,
+        Lifetime.toComponentId,
+        Energy.toComponentId,
+      ]
+    ),
+    (
+      for e in ents:
+        for compId in optional:
+          if rng.rand(1.0) < SELECTION_THRESHOLD:
+            w.addComponent(e, compId)
+    )
+  )
   # ------------------------------
   # Delete dense entity
   # ------------------------------
