@@ -10,7 +10,7 @@ type
   Entity* = object
     id:uint             ## The packed entity ID. This usually combines the Block ID and the local index
                         ## within that block to form a unique memory address for the entity's row.
-    archetypeId:uint16  ## Identifies which Archetype (table of components) this entity currently belongs to.
+    archetypeId*:uint16  ## Identifies which Archetype (table of components) this entity currently belongs to.
     widx:int            ## The "World Index". A stable ID referencing this entity's slot in the main entities list,
                         ## used for handle lookup and recycling.
 
@@ -33,9 +33,9 @@ type
 ## This allows for flexible addition/removal of components at the cost of iteration speed.
 type
   SparseHandle* = object
-    id   : uint       ## The unique identifier of the entity in sparse storage.
+    id*   : uint       ## The unique identifier of the entity in sparse storage.
     gen  : uint32     ## The generation counter for validity checks.
-    archID : uint16 ## A bitmask representing the set of components currently owned by this entity.
+    archID : uint16
 
   ## A type class (concept-like alias) encompassing various raw Entity forms.
   ##
@@ -61,7 +61,7 @@ template `[]`*[N,P,T,S,B](f: SoAFragmentArray[N,P,T,S,B], d:SparseHandle):untype
   
   # Calculate the bucket index via toSparse indirection.
   # Calculate the offset: `id and (S-1)` gets the index within that page (modulo 64).
-  f.sparse[f.toSparse[d.id shr 6]-1][d.id and (S-1).uint]
+  f.sparse[f.toSparse[d.id shr BIT_DIVIDER.uint]-1][d.id and BIT_REMAINDER.uint]
 
 ## Sets component data in a `SoAFragmentArray` for a raw `Entity`.
 proc `[]=`[N,P,T,S,B](f:var SoAFragmentArray[N,P,T,S,B], e:SomeEntity, v:B) = 
@@ -75,7 +75,7 @@ proc `[]=`*[N,P,T,S,B](f:var SoAFragmentArray[N,P,T,S,B], d:DenseHandle, v:B) =
 proc `[]=`*[N,P,T,S,B](f: var SoAFragmentArray[N,P,T,S,B], d:SparseHandle, v:B) = 
   let S = sizeof(uint)*8
   when P: setChangedSparse(f, d.id)
-  f.sparse[f.toSparse[d.id shr 6]-1][d.id and (S-1).uint] = v
+  f.sparse[f.toSparse[d.id shr BIT_DIVIDER.uint]-1][d.id and BIT_REMAINDER.uint] = v
 
 ####################################################################################################################################################
 ################################################################# OPERATORS #######################################################################
@@ -101,3 +101,6 @@ template `==`*(d1,d2:SparseHandle):bool = (d1.id == d2.id) and (d1.gen == d2.gen
 ##
 ## Useful for debugging and logging. Displays the Entity ID and its current Archetype ID.
 proc `$`*(e:SomeEntity):string = "e" & $e.id & " arch " & $e.archetypeId
+
+proc wid*(d:DenseHandle): int = d.obj.widx
+proc id*(d:DenseHandle): uint = d.obj.id

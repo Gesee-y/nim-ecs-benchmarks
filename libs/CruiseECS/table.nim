@@ -41,10 +41,10 @@ type
   QueryFilter* = object
 
     # Dense Query
-    dLayer:HibitsetType
+    dLayer*:HibitsetType
 
     # Sparse Query
-    sLayer:HibitsetType
+    sLayer*:HibitsetType
 
 include "fragment.nim"
 include "entity.nim"
@@ -71,21 +71,25 @@ type
   QueryCacheEntry* = object
     version*: int
     nodes*: seq[ArchetypeNode]
+    archs: set[uint16]
 
   ECSWorld* = ref object
     registry:ComponentRegistry
     entities:seq[Entity]
     commandBufs*:seq[CommandBuffer]
     events*: EventManager
-    handles:seq[ptr Entity]
+    handles*:seq[ptr Entity]
     generations:seq[uint32]
     sparse_gens:seq[uint32]
     free_entities:seq[int]
-    archGraph:ArchetypeGraph
+    archGraph*:ArchetypeGraph
     free_list:seq[uint]
     max_index:int
     blockCount:int
     queryCache*: Table[QueryKey, QueryCacheEntry]
+    resources*: Table[string, pointer]
+
+include "entity_wrappers.nim"
 
 proc newECSWorld*(max_entities:int=1000000):ECSWorld =
   var w:ECSWorld
@@ -107,8 +111,19 @@ proc newECSWorld*(max_entities:int=1000000):ECSWorld =
 
 {.push inline.}
 
+proc addResource*[T](w: var ECSWorld, r:T) =
+  w.resources[$T] = cast[pointer](r)
+
+proc getResource*[T](w: ECSWorld): T =
+  cast[T](w.resources[$T])
+
 proc isEmpty(t:TableRange | ptr TableRange):bool = t.r.s == t.r.e
 proc isFull(t:TableRange | ptr TableRange):bool = t.r.e - t.r.s == DEFAULT_BLK_SIZE
+
+proc getDHandle*(w: ECSWorld, i:int | uint): DenseHandle = DenseHandle(obj: addr w.entities[i], gen: w.generations[i])
+proc getDHandleFromID*(w: ECSWorld, i:int | uint): DenseHandle = 
+  var e = w.handles[i.toIdx].widx
+  w.getDHandle(e)
 
 proc getComponentId*(world:ECSWorld, t:typedesc):int =
   check($t in world.registry.cmap, "Component type '" & $t & "' is not registered. Call registerComponent first.")
@@ -119,10 +134,7 @@ proc getArchetype*(w:ECSWorld, e:SomeEntity):ArchetypeNode =
 proc getArchetype*(w:ECSWorld, d:DenseHandle):ArchetypeNode =
   return w.getArchetype(d.obj)
 
-proc makeId(info:(uint, Range)):uint =
-  return ((info[0]).uint shl BLK_SHIFT) or ((info[1].e-1) mod DEFAULT_BLK_SIZE).uint
-
-proc makeId(idx,bid:int|uint):uint =
+proc makeId*(idx,bid:int|uint):uint =
   return (bid.uint shl BLK_SHIFT) or idx.uint
 
 proc makeId(i:int):uint =
@@ -147,6 +159,7 @@ proc getCommandBuffer*(w: var ECSWorld, id:int):CommandBuffer =
 
 proc isAlive*(w:ECSWorld, d:DenseHandle):bool =
   return d.gen == w.generations[d.obj.widx]
+
 
 {.pop.}
 
@@ -186,13 +199,40 @@ proc getStableEntities(world:ECSWorld, n:int):seq[int] =
 template registerComponent*(world:var ECSWorld, t:typed, P:static bool=false):int =
   registerComponent(world.registry, t, P)
 
+macro requireComponent*(w: var ECSWorld, base: typedesc, comps:typedesc) =
+  if base.repr == comps.repr: return
+  else:
+    let bid = getComponentIdFromRegistry(base)
+    let cid = getComponentIdFromRegistry(comps)
+
+    if bid notin REQUIRED_COMPS:
+      REQUIRED_COMPS[bid] = newSeq[int]()
+
+    REQUIRED_COMPS[bid].add(cid)
+
+  return quote("@") do:    
+    discard `@w`.registerComponent(`@comps`)
+    `@w`.archGraph.requiredComps[toComponentId(`@base`)].add(toComponentId(`@comps`))
+
 template get*[T](world:ECSWorld,t:typedesc[T], P:static bool= false):untyped =
-  let id = world.getComponentId(t)
+  let id = toComponentId(t)
   getValue[T](world.registry.entries[id], P)
 
 template get*[T](world:ECSWorld, t:typedesc[T], i:untyped, P:static bool= false):untyped =
-  let id = world.getComponentId(t)
-  getValue[T](world.registry.entries[id], P)[i]
+  let id = toComponentId(t)
+  let f = getValue[T](world.registry.entries[id], P)
+  f[i]
+
+template get*[T](ent:DWEntity | SWEntity, t:typedesc[T], P:static bool= false):untyped =
+  get[T](ent.w, t, ent.handle, P)
+
+template set*[T](world:var ECSWorld, i:untyped, v: T, P:static bool= false):untyped =
+  let id = toComponentId(T)
+  var f = getValue[T](world.registry.entries[id], P)
+  f[i] = v
+
+template set*[T](ent:var DWEntity | var SWEntity, v: T, P:static bool= false):untyped =
+  set(ent.w, ent.handle, v, P)
 
 proc resize(world: var ECSWorld, n:int) =
   for entry in world.registry.entries:
