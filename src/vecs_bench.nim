@@ -1,5 +1,5 @@
 import times, math, tables, random
-import ../../vecs/src/vecs
+import ../libs/vecs/src/vecs
 
 # =========================
 # Benchmark template

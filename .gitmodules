@@ -1,0 +1,21 @@
+[submodule "libs/Cruise"]
+	path = libs/Cruise
+	url = https://github.com/Gesee-y/Cruise
+[submodule "libs/miniecs"]
+	path = libs/miniecs
+	url = https://github.com/erayzesen/miniecs
+[submodule "libs/pirata"]
+	path = libs/pirata
+	url = https://github.com/planetis-m/pirata
+[submodule "libs/polymorph"]
+	path = libs/polymorph
+	url = https://github.com/rlipsc/polymorph
+[submodule "libs/easyess"]
+	path = libs/easyess
+	url = https://github.com/ErikWDev/easyess
+[submodule "libs/vecs"]
+	path = libs/vecs
+	url = https://github.com/RowDaBoat/vecs
+[submodule "libs/Necsus"]
+	path = libs/Necsus
+	url = https://github.com/Nycto/necsus

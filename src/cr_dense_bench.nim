@@ -1,4 +1,4 @@
-include "../libs/CruiseECS/table.nim"
+include ../libs/Cruise/src/ecs/table
 
 # =========================
 # Benchmark template
