@@ -105,7 +105,8 @@ proc calculateStatistics*(values: seq[float]): Statistics =
     let diff = v - result.mean
     variance += diff * diff
 
-  result.stddev = sqrt(variance/sorted.len.float)
+  if sorted.len > 1:
+    result.stddev = sqrt(variance / (sorted.len - 1).float)
 
   let mid = sorted.len div 2
   if sorted.len mod 2 == 0:
@@ -170,7 +171,7 @@ proc showDetailed*(b: Benchmark) =
   echo "=" .repeat(70)
 
 proc notNaN(v:float):float =
-  if v.isNaN or v.classify == fcInf:
+  if v.isNaN or v.classify in {fcInf, fcNegInf}:
     return 0.0
 
   return v
@@ -292,9 +293,9 @@ proc saveSummary*(suite: BenchmarkSuite, name: string) =
   var file = open(name & ".csv", fmWrite)
   defer: file.close()
 
-  file.writeLine(suite.name & ",time_mean,mem_median")
+  file.writeLine(suite.name & ",time_median,mem_median")
 
   for bench in suite.benchmarks:
-    let mem = prettyMem(bench.memStats.mean)
-    let time = prettyTime(bench.timeStats.mean)
+    let mem = prettyMem(bench.memStats.median)
+    let time = prettyTime(bench.timeStats.median)
     file.writeLine(bench.name & "," & time & "," & mem)
