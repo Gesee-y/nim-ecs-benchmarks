@@ -25,6 +25,10 @@ type
 # Accumulator that outlives the benchmark so reads can't be optimised away
 var readSink = 0'f32
 
+# Handles captured while the world is built, so the random access benchmarks can
+# index by entity the way every other suite does
+var benchEntities: seq[EntityId]
+
 # =========================
 # Systems
 # =========================
@@ -32,6 +36,11 @@ var readSink = 0'f32
 proc spawnPosVel(spawn: Spawn[(Position, Velocity)]) {.startupSys.} =
   for _ in 0..<ENTITY_COUNT:
     spawn.with(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
+
+proc spawnTrackedPos(spawn: FullSpawn[(Position, )]) {.startupSys.} =
+  benchEntities.setLen(0)
+  for _ in 0..<ENTITY_COUNT:
+    benchEntities.add spawn.with(Position(x: 1.0, y: 1.0))
 
 proc spawnPosVelAccel(spawn: Spawn[(Position, Velocity, Acceleration)]) {.startupSys.} =
   for _ in 0..<ENTITY_COUNT:
@@ -57,6 +66,12 @@ proc readSystem(query: FullQuery[(Position, )], lookup: Lookup[(Position, )]) {.
     let found = lookup(eid)
     if found.isSome:
       readSink += found.get()[0].x
+
+proc writeSystem(lookup: Lookup[(ptr Position, )]) {.loopSys.} =
+  for eid in benchEntities:
+    let found = lookup(eid)
+    if found.isSome:
+      found.get()[0][] = Position(x: readSink, y: readSink)
 
 proc addComponent(
   query: FullQuery[(Position, Not[Acceleration])],
@@ -89,6 +104,7 @@ proc appCreate() {.necsus([~createEntities], newNecsusConf(entitySize = 100_000)
 proc appIter() {.necsus([~spawnPosVel, ~move], newNecsusConf(entitySize = 100_000)).}
 proc appDelete() {.necsus([~spawnPosVel, ~deleteEntities], newNecsusConf(entitySize = 100_000)).}
 proc appRead() {.necsus([~spawnPosVel, ~readSystem], newNecsusConf(entitySize = 100_000)).}
+proc appWrite() {.necsus([~spawnTrackedPos, ~writeSystem], newNecsusConf(entitySize = 100_000)).}
 proc appAddComp() {.necsus([~spawnPosVel, ~addComponent], newNecsusConf(entitySize = 100_000)).}
 proc appRemoveComp() {.necsus([~spawnPosVelAccel, ~removeComponent], newNecsusConf(entitySize = 100_000)).}
 proc appAddRemoveComp() {.necsus([~spawnPosVel, ~addRemoveComponent], newNecsusConf(entitySize = 100_000)).}
@@ -157,7 +173,21 @@ proc runNecsusBenchmarks() =
   )
   showDetailed(suite.benchmarks[^1])
 
-  # 5. Add component
+  # 5. Write
+  suite.add benchmarkWithSetup(
+    "write",
+    SAMPLE,
+    WARMUP,
+    (
+      var app = initAppWrite()
+    ),
+    (
+      app.tick()
+    )
+  )
+  showDetailed(suite.benchmarks[^1])
+
+  # 6. Add component
   suite.add benchmarkWithSetup(
     "add component",
     SAMPLE,
@@ -171,7 +201,7 @@ proc runNecsusBenchmarks() =
   )
   showDetailed(suite.benchmarks[^1])
 
-  # 6. Remove component
+  # 7. Remove component
   suite.add benchmarkWithSetup(
     "remove component",
     SAMPLE,
@@ -185,7 +215,7 @@ proc runNecsusBenchmarks() =
   )
   showDetailed(suite.benchmarks[^1])
 
-  # 7. Add + Remove component
+  # 8. Add + Remove component
   suite.add benchmarkWithSetup(
     "add remove component",
     SAMPLE,
