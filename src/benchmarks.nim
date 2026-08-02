@@ -69,14 +69,14 @@ proc prettyTime*(t: float): string =
   result = v.formatFloat(ffDecimal, 2) & " " & suffix
 
 proc prettyMem*(m: float): string =
-  if m < 0:
-    return "Neg B"
-  elif m < 1024:
-    return m.formatFloat(ffDecimal, 2) & " B "
-  elif m < 1024 * 1024:
-    return (m / 1024).formatFloat(ffDecimal, 2) & " KB"
+  let sign = if m < 0: "-" else: ""
+  let a = abs(m)
+  if a < 1024:
+    return sign & a.formatFloat(ffDecimal, 2) & " B "
+  elif a < 1024 * 1024:
+    return sign & (a / 1024).formatFloat(ffDecimal, 2) & " KB"
   else:
-    return (m / (1024 * 1024)).formatFloat(ffDecimal, 2) & " MB"
+    return sign & (a / (1024 * 1024)).formatFloat(ffDecimal, 2) & " MB"
 
 proc prettyPercent*(p: float): string =
   let sign = if p >= 0: "+" else: ""
@@ -219,15 +219,13 @@ proc initBenchmark*(benchmarkName: string, sample, warm: int): Benchmark =
   result.times = newSeqOfCap[float](sample)
   result.mems = newSeqOfCap[float](sample)
 
-template measure*(bench: var Benchmark, code: untyped) =
-  let m0 = getOccupiedMem()
+template measure*(bench: var Benchmark, memBaseline: int, code: untyped) =
   let t0 = getMonoTime()
   code
   let elapsed = (getMonoTime() - t0).inNanoseconds.float / 1e9
-  let allocated = max(0, getOccupiedMem() - m0).float
 
   bench.times.add(elapsed)
-  bench.mems.add(allocated)
+  bench.mems.add((getOccupiedMem() - memBaseline).float)
 
 template benchmark*(benchmarkName: string, sample, code: untyped): untyped =
   benchmark(benchmarkName, sample, 1, code)
@@ -240,7 +238,8 @@ template benchmark*(benchmarkName: string, sample, warm, code: untyped): untyped
       code
 
     for i in 0..<sample:
-      measure(bench):
+      let memBaseline = getOccupiedMem()
+      measure(bench, memBaseline):
         code
 
   finalize(bench)
@@ -260,8 +259,9 @@ template benchmarkWithSetup*(benchmarkName: string, sample, warm,
       code
 
     for i in 0..<sample:
+      let memBaseline = getOccupiedMem()
       setup
-      measure(bench):
+      measure(bench, memBaseline):
         code
 
   finalize(bench)
