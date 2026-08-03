@@ -1,4 +1,4 @@
-import times, math, tables, options, random
+import times, math, tables, options, random, common
 import ../libs/Necsus/src/necsus
 
 # =========================
@@ -6,23 +6,14 @@ import ../libs/Necsus/src/necsus
 # =========================
 import benchmarks, churn_common
 
-const SAMPLE = 1000
-const WARMUP = 1
-const ENTITY_COUNT = 10000
-const SELECTION_THRESHOLD = 0.1
-
 # =========================
 # Components
 # =========================
+#
+# Necsus keeps its own copies of the optional components so they can be marked
+# `{.accessory.}`, which the heterogeneous benchmark relies on.
 
 type
-  Position = object
-    x, y: float32
-  Velocity = object
-    x, y: float32
-  Acceleration = object
-    x, y: float32
-
   Tag = object
   Rotation {.accessory.} = object
     angle: float32

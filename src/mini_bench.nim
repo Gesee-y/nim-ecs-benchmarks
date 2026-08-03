@@ -1,49 +1,10 @@
-import times, math, tables, random
+import times, math, tables, random, common
 import ../libs/miniecs/miniecs
 
 # =========================
 # Benchmark template
 # =========================
 import benchmarks, churn_common
-
-const SAMPLE = 1000
-const WARMUP = 1
-const ENTITY_COUNT = 10000
-const SELECTION_THRESHOLD = 0.1
-
-# =========================
-# Components
-# =========================
-
-type
-  Position = object
-    x, y: float32
-
-  Velocity = object
-    x, y: float32
-
-  Acceleration = object
-    x, y: float32
-
-  Tag = object
-
-  Health = object
-    hp: int
-
-  Rotation = object
-    angle: float32
-  Scale = object
-    sx, sy: float32
-  Mass = object
-    value: float32
-  Force = object
-    fx, fy: float32
-  Torque = object
-    value: float32
-  Energy = object
-    value: float32
-  Friction = object
-    coef: float32
 
 proc churnSpawn(ecs: var MiniECS): Entity =
   result = ecs.newEntity()
@@ -265,7 +226,7 @@ proc runMiniBenchmarks() =
             of 6: e.addComponent(Force(fx: 1.0, fy: 1.0))
             of 7: e.addComponent(Torque(value: 1.0))
             of 8: e.addComponent(Energy(value: 1.0))
-            of 9: e.addComponent(Friction(coef: 0.5))
+            of 9: e.addComponent(Friction(coeff: 0.5))
             else: discard
     ),
     (

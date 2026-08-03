@@ -1,15 +1,12 @@
 import times, math, tables, random
 import ../libs/easyess/src/easyess
 
+from common import  SAMPLE, WARMUP, ENTITY_COUNT, SELECTION_THRESHOLD
+
 # =========================
 # Benchmark template
 # =========================
 import benchmarks
-
-const SAMPLE = 1000
-const WARMUP = 1
-const ENTITY_COUNT = 10000
-const SELECTION_THRESHOLD = 0.1
 
 # =========================
 # Components
@@ -80,7 +77,7 @@ proc runEasyBenchmarks() =
   # ------------------------------
   # Easyess doesn't have a direct "create multiple" without components in a single call like Cruise
   # But we can simulate it.
-  
+
   suite.add benchmarkWithSetup(
     "create entity",
     SAMPLE,

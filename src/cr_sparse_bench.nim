@@ -1,4 +1,4 @@
-import times, math, random#, nimprof
+import common, times, math, random#, nimprof
 include ../libs/Cruise/src/ecs/table
 
 # =========================
@@ -6,45 +6,6 @@ include ../libs/Cruise/src/ecs/table
 # =========================
 import benchmarks, churn_common
 
-const
-  Samples = 1000
-  Warmup  = 0
-  ENTITY_COUNT = 10_000
-  SELECTION_THRESHOLD = 0.1
-
-type
-  Position = object
-    x, y: float32
-
-  Velocity = object
-    x, y: float32
-
-  Acceleration = object
-    x, y: float32
-
-  Heal = object
-    hp:int
-
-  Rotation = object
-    angle: float32
-
-  Scale = object
-    sx, sy: float32
-
-  Mass = object
-    value: float32
-
-  Friction = object
-    coeff: float32
-
-  Bounce = object
-    factor: float32
-
-  Lifetime = object
-    remaining: float32
-
-  Energy = object
-    value: float32
 let
   Pos = 0
   Vel = 1
@@ -119,7 +80,7 @@ proc runSparseBenchmarks() =
   var ss = 0
   suite.add benchmarkWithSetup(
     "heterogeneous iter",
-    Samples,
+    SAMPLE,
     WARMUP,
     (
       var w = setupWorldHetero()
@@ -167,8 +128,8 @@ proc runSparseBenchmarks() =
   # ------------------------------
   suite.add benchmarkWithSetup(
     "create entity",
-    Samples,
-    Warmup,
+    SAMPLE,
+    WARMUP,
     (
       var w = setupWorld()
       var ents:seq[SparseHandle]
@@ -189,8 +150,8 @@ proc runSparseBenchmarks() =
   # ------------------------------
   suite.add benchmarkWithSetup(
     "create entities batch 1k",
-    Samples,
-    Warmup,
+    SAMPLE,
+    WARMUP,
     (
       var w = setupWorld()
       var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, Position, Velocity)
@@ -207,8 +168,8 @@ proc runSparseBenchmarks() =
   # ------------------------------
   suite.add benchmarkWithSetup(
     "delete entity",
-    Samples,
-    Warmup,
+    SAMPLE,
+    WARMUP,
     (
       var w = setupWorld()
       var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, Position, Velocity)
@@ -224,8 +185,8 @@ proc runSparseBenchmarks() =
   # ------------------------------
   suite.add benchmarkWithSetup(
     "add component",
-    Samples,
-    Warmup,
+    SAMPLE,
+    WARMUP,
     (
       var w = setupWorld()
       var ents = w.createSparseEntities(ENTITY_COUNT,Position)
@@ -244,8 +205,8 @@ proc runSparseBenchmarks() =
   # ------------------------------
   suite.add benchmarkWithSetup(
     "add component batch",
-    Samples,
-    Warmup,
+    SAMPLE,
+    WARMUP,
     (
       var w = setupWorld()
       var ents = w.createSparseEntities(ENTITY_COUNT, Position)),
@@ -258,8 +219,8 @@ proc runSparseBenchmarks() =
   # ------------------------------
   suite.add benchmarkWithSetup(
     "remove component",
-    Samples,
-    Warmup,
+    SAMPLE,
+    WARMUP,
     (
       var w = setupWorld()
       var e = w.createSparseEntity(Position, Velocity)),
@@ -273,8 +234,8 @@ proc runSparseBenchmarks() =
   # ------------------------------
   suite.add benchmarkWithSetup(
     "add remove component",
-    Samples,
-    Warmup,
+    SAMPLE,
+    WARMUP,
     (
       var w = setupWorld()
       var ents = w.createSparseEntities(ENTITY_COUNT,Position)
@@ -291,7 +252,7 @@ proc runSparseBenchmarks() =
 
   suite.add benchmarkWithSetup(
     "iteration",
-    Samples,
+    SAMPLE,
     Warmup,
     (
       var w = setupWorld()
@@ -316,7 +277,7 @@ proc runSparseBenchmarks() =
   var s = 0'f32
   suite.add benchmarkWithSetup(
     "read",
-    Samples,
+    SAMPLE,
     Warmup,
     (
       var w = setupWorld()
@@ -331,7 +292,7 @@ proc runSparseBenchmarks() =
 
   suite.add benchmarkWithSetup(
     "write",
-    Samples,
+    SAMPLE,
     Warmup,
     (
       var w = setupWorld()

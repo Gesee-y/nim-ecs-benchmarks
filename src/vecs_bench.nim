@@ -1,49 +1,10 @@
-import times, math, tables, random
+import times, math, tables, random, common
 import ../libs/vecs/src/vecs
 
 # =========================
 # Benchmark template
 # =========================
 import benchmarks, churn_common
-
-const SAMPLE = 1000
-const WARMUP = 1
-const ENTITY_COUNT = 10000
-const SELECTION_THRESHOLD = 0.1
-
-# =========================
-# Components
-# =========================
-
-type
-  Position = object
-    x, y: float32
-
-  Velocity = object
-    x, y: float32
-
-  Acceleration = object
-    x, y: float32
-
-  Tag = object
-
-  Health = object
-    hp: int
-
-  Rotation = object
-    angle: float32
-  Scale = object
-    sx, sy: float32
-  Mass = object
-    value: float32
-  Force = object
-    fx, fy: float32
-  Torque = object
-    value: float32
-  Energy = object
-    value: float32
-  Friction = object
-    coef: float32
 
 proc churnSpawn(w: var World): EntityId =
   w.add((Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0)), Immediate)
@@ -252,7 +213,7 @@ proc runVecsBenchmarks() =
             of 6: w.add(e, Force(fx: 1.0, fy: 1.0), Immediate)
             of 7: w.add(e, Torque(value: 1.0), Immediate)
             of 8: w.add(e, Energy(value: 1.0), Immediate)
-            of 9: w.add(e, Friction(coef: 0.5), Immediate)
+            of 9: w.add(e, Friction(coeff: 0.5), Immediate)
             else: discard
       var q: Query[(Write[Position], Velocity)]
     ),

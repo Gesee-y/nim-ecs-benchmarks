@@ -1,15 +1,10 @@
-import times, math, tables, random
+import times, math, tables, random, common
 import ../libs/polymorph/src/polymorph
 
 # =========================
 # Benchmark template
 # =========================
 import benchmarks
-
-const SAMPLE = 1000
-const WARMUP = 1
-const ENTITY_COUNT = 10000
-const SELECTION_THRESHOLD = 0.1
 
 # =========================
 # Components
@@ -122,7 +117,7 @@ proc runPolyBenchmarks() =
     (
       for e in ents:
         e.addComponent Velocity(x: 1.0, y: 1.0)
-      
+
       # Cleanup: remove component for next sample or delete entity
       # Actually it's easier to just delete entity in teardown if needed.
       # But here we just want to measure add.
@@ -145,7 +140,7 @@ proc runPolyBenchmarks() =
     (
       for e in ents:
         e.removeComponent Velocity
-      
+
       for e in ents: e.delete()
       ents.setLen(0)
     )
@@ -166,7 +161,7 @@ proc runPolyBenchmarks() =
       for e in ents:
         e.addComponent Velocity(x: 1.0, y: 1.0)
         e.removeComponent Velocity
-      
+
       for e in ents: e.delete()
       ents.setLen(0)
     )
@@ -264,4 +259,3 @@ proc runPolyBenchmarks() =
 
 if isMainModule:
   runPolyBenchmarks()
-

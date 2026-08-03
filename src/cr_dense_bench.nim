@@ -4,37 +4,19 @@ include ../libs/Cruise/src/ecs/table
 # Benchmark template
 # =========================
 import benchmarks, churn_common
-import random
+import random, common
 
-const SAMPLE = 1000
-const WARMUP = 0
-const ENTITY_COUNT = 10000
-const SELECTION_THRESHOLD = 0.1
 # 1563
 # =========================
 # Components
 # =========================
 
 type
-  Position = object
-    x, y: float32
-
-  Velocity = object
-    x, y: float32
-
-  Acceleration = object
-    x, y: float32
-
-  Tag = object
-
-  Health = object
-    hp:int
-
   Timer[T] = object
     remaining:T
 
-proc newTimer[T](r:T):Timer[T] = Timer[T]() 
-proc newPosition(x,y:float32):Position = Position() 
+proc newTimer[T](r:T):Timer[T] = Timer[T]()
+proc newPosition(x,y:float32):Position = Position()
 proc setComponent[T](blk: ptr T, i:uint, v:Position) =
   blk.data.x[i] = v.x*2
   blk.data.y[i] = v.y/2
@@ -42,29 +24,6 @@ proc setComponent[T](blk: ptr T, i:uint, v:Position) =
 # =========================
 # World setup
 # =========================
-
-# Composants supplémentaires (on en a déjà Position, Velocity, Acceleration)
-type
-  Rotation = object
-    angle: float32
-
-  Scale = object
-    sx, sy: float32
-
-  Mass = object
-    value: float32
-
-  Friction = object
-    coeff: float32
-
-  Bounce = object
-    factor: float32
-
-  Lifetime = object
-    remaining: float32
-
-  Energy = object
-    value: float32
 
 proc setupWorldHetero(): ECSWorld =
   var world = newECSWorld()
@@ -124,7 +83,7 @@ proc churnIterate(w: var ECSWorld) =
 
 proc runDenseBenchmarks() =
   var suite = initSuite("Cruise Dense")
-  
+
   # ------------------------------
   # Create single sparse entity
   # ------------------------------
@@ -302,7 +261,7 @@ proc runDenseBenchmarks() =
     ),
     (
       for (bid, r) in w.denseQuery(query(w, Position and Velocity)):
-        
+
         var x = addr posc.blocks[bid].data.x
         let dx = addr velc.blocks[bid].data.x
         var y = addr posc.blocks[bid].data.y
@@ -326,7 +285,7 @@ proc runDenseBenchmarks() =
       var w = setupWorldNoEnt()
       var ents:seq[DenseHandle] = w.createEntities(ENTITY_COUNT, Position)
       var posc = w.get(Position)
-      
+
     ),
     (
       for e in ents:
@@ -334,7 +293,7 @@ proc runDenseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
-  
+
   suite.add benchmarkWithSetup(
     "write",
     SAMPLE,
@@ -358,7 +317,7 @@ proc runDenseBenchmarks() =
     (
       var w = setupWorldNoEnt()
       var ents:seq[DenseHandle] = w.createEntities(ENTITY_COUNT, Position, Velocity)
-      
+
       for e in ents:
         w.addComponent(e, Acceleration.toComponentId)
       for e in ents:
@@ -378,7 +337,7 @@ proc runDenseBenchmarks() =
     (
       var w = setupWorldNoEnt()
       var ents:seq[DenseHandle] = w.createEntities(ENTITY_COUNT, Position, Velocity)
-      
+
       for e in ents:
         w.addComponent(e, Velocity.toComponentId)
     ),
@@ -396,7 +355,7 @@ proc runDenseBenchmarks() =
     (
       var w = setupWorldNoEnt()
       var ents:seq[DenseHandle] = w.createEntities(ENTITY_COUNT, Position, Velocity)
-      
+
       for e in ents:
         w.addComponent(e, Acceleration.toComponentId)
       for e in ents:
@@ -419,7 +378,7 @@ proc runDenseBenchmarks() =
       var archBase = w.archGraph.findArchetype([toComponentId(Position), toComponentId(Velocity)])
       var archDest = w.archGraph.findArchetype([toComponentId(Position), toComponentId(Velocity), toComponentId(Acceleration)])
       var ents:seq[DenseHandle] = w.createEntities(ENTITY_COUNT, Position, Velocity)
-      
+
       for e in ents:
         migrateEntity(w, e, archDest)
       for e in ents:
@@ -431,7 +390,7 @@ proc runDenseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
-  
+
   suite.add benchmarkWithSetup(
     "migrate dense entity batch",
     SAMPLE,
@@ -441,7 +400,7 @@ proc runDenseBenchmarks() =
       var archBase = w.archGraph.findArchetype([toComponentId(Position), toComponentId(Velocity)])
       var archDest = w.archGraph.findArchetype([toComponentId(Position), toComponentId(Velocity), toComponentId(Acceleration)])
       var ents:seq[DenseHandle] = w.createEntities(ENTITY_COUNT, Position, Velocity)
-      
+
       migrateEntity(w, ents, archDest)
       migrateEntity(w, ents, archBase)
     ),
