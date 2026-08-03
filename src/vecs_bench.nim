@@ -4,7 +4,7 @@ import ../libs/vecs/src/vecs
 # =========================
 # Benchmark template
 # =========================
-include "benchmarks.nim"
+import benchmarks, churn_common
 
 const SAMPLE = 1000
 const WARMUP = 1
@@ -44,6 +44,22 @@ type
     value: float32
   Friction = object
     coef: float32
+
+proc churnSpawn(w: var World): EntityId =
+  w.add((Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0)), Immediate)
+
+proc churnDestroy(w: var World; entity: EntityId) =
+  w.remove(entity, Immediate)
+
+proc newChurnWorld(churned: bool): World =
+  result = World()
+  result.populateChurn(churned)
+
+proc churnIterate(w: var World) =
+  var q: Query[(Write[Position], Velocity)]
+  for (pos, vel) in w.query(q):
+    pos.x += vel.x
+    pos.y += vel.y
 
 # =========================
 # Benchmarks
@@ -247,6 +263,8 @@ proc runVecsBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+
+  addChurnRows(suite, "Vecs")
 
   suite.showSummary()
   suite.saveSummary("vecs")

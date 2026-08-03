@@ -4,7 +4,7 @@ import ../libs/miniecs/miniecs
 # =========================
 # Benchmark template
 # =========================
-include "benchmarks.nim"
+import benchmarks, churn_common
 
 const SAMPLE = 1000
 const WARMUP = 1
@@ -44,6 +44,23 @@ type
     value: float32
   Friction = object
     coef: float32
+
+proc churnSpawn(ecs: var MiniECS): Entity =
+  result = ecs.newEntity()
+  result.addComponent(Position(x: 1.0, y: 1.0))
+  result.addComponent(Velocity(x: 1.0, y: 1.0))
+
+proc churnDestroy(ecs: var MiniECS; entity: Entity) =
+  destroy(entity.getID(), ecs)
+
+proc newChurnWorld(churned: bool): MiniECS =
+  result = newMiniECS()
+  result.populateChurn(churned)
+
+proc churnIterate(ecs: var MiniECS) =
+  for id, pos, vel in ecs.allWith(Position, Velocity):
+    pos.x += vel.x
+    pos.y += vel.y
 
 # =========================
 # Benchmarks
@@ -258,6 +275,8 @@ proc runMiniBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+
+  addChurnRows(suite, "MiniECS")
 
   suite.showSummary()
   suite.saveSummary("mini")

@@ -1,7 +1,7 @@
 import ../libs/pirata/src/pirata
 import random
 
-include "benchmarks.nim"
+import benchmarks, churn_common
 
 const
   sample = 1000
@@ -76,6 +76,27 @@ proc initWorldHetero(): PirataWorld[HeteroKind] =
   result.register(hkBounce,       Bounce)
   result.register(hkLifetime,     Lifetime)
   result.register(hkEnergy,       Energy)
+
+proc churnSpawn(world: var PirataWorld[ComponentKind]): Entity =
+  result = world.spawn()
+  world.add(result, ckPosition, Position(x: 1.0, y: 1.0))
+  world.add(result, ckVelocity, Velocity(x: 1.0, y: 1.0))
+
+proc churnDestroy(world: var PirataWorld[ComponentKind]; entity: Entity) =
+  world.destroy(entity)
+
+proc newChurnWorld(churned: bool): PirataWorld[ComponentKind] =
+  result = newPirata[ComponentKind](ChurnCapacity)
+  result.register(ckPosition, Position)
+  result.register(ckVelocity, Velocity)
+  result.populateChurn(churned)
+
+proc churnIterate(world: var PirataWorld[ComponentKind]) =
+  for entity in world.query({ckPosition, ckVelocity}):
+    let pos = addr world.fetch(entity, ckPosition, Position)
+    let vel = world.fetch(entity, ckVelocity, Velocity)
+    pos.x += vel.x
+    pos.y += vel.y
 
 proc initWorld(): PirataWorld[ComponentKind] =
   result = newPirata[ComponentKind](worldCapacity)
@@ -276,6 +297,8 @@ proc runPirataBenchmarks() =
   )
   showDetailed(suite.benchmarks[7])
   echo sum
+
+  addChurnRows(suite, "Pirata")
 
   suite.showSummary()
   suite.saveSummary("pirata")

@@ -3,7 +3,7 @@ include ../libs/Cruise/src/ecs/table
 # =========================
 # Benchmark template
 # =========================
-include "benchmarks.nim"
+import benchmarks, churn_common
 import random
 
 const SAMPLE = 1000
@@ -97,6 +97,30 @@ proc setupWorldNoEnt(): ECSWorld =
 # ---------------------------------
 # Entity creation
 # ---------------------------------
+
+proc churnSpawn(w: var ECSWorld): DenseHandle =
+  w.createEntity(Position, Velocity)
+
+proc churnDestroy(w: var ECSWorld; entity: var DenseHandle) =
+  w.deleteEntity(entity)
+
+proc newChurnWorld(churned: bool): ECSWorld =
+  result = setupWorldNoEnt()
+  result.populateChurn(churned)
+
+proc churnIterate(w: var ECSWorld) =
+  var posc = w.get(Position)
+  let velc = w.get(Velocity)
+
+  for (bid, r) in w.denseQuery(query(w, Position and Velocity)):
+    var x = addr posc.blocks[bid].data.x
+    let dx = addr velc.blocks[bid].data.x
+    var y = addr posc.blocks[bid].data.y
+    let dy = addr velc.blocks[bid].data.y
+
+    for i in r:
+      x[i] += dx[i]
+      y[i] += dy[i]
 
 proc runDenseBenchmarks() =
   var suite = initSuite("Cruise Dense")
@@ -426,6 +450,8 @@ proc runDenseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  addChurnRows(suite, "Cruise Dense")
+
   suite.showSummary()
   suite.saveSummary("cr_dense")
 

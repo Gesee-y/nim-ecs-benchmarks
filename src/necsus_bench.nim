@@ -4,7 +4,7 @@ import ../libs/Necsus/src/necsus
 # =========================
 # Benchmark template
 # =========================
-include "benchmarks.nim"
+import benchmarks, churn_common
 
 const SAMPLE = 1000
 const WARMUP = 1
@@ -97,6 +97,22 @@ proc createEntities(spawn: Spawn[(Position, Velocity)]) {.loopSys.} =
   for _ in 0..<ENTITY_COUNT:
     spawn.with(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
 
+var churnThisApp = false
+
+proc spawnChurnWorld(
+  spawn: FullSpawn[(Position, Velocity)], delete: Delete
+) {.startupSys.} =
+  var handles = newSeq[EntityId](ChurnEntityCount)
+  for i in 0 ..< ChurnEntityCount:
+    handles[i] = spawn.with(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
+
+  if churnThisApp:
+    for round in churnSchedule:
+      for idx in round:
+        delete(handles[idx])
+      for idx in round:
+        handles[idx] = spawn.with(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
+
 proc move(entities: Query[(ptr Position, Velocity)]) {.loopSys.} =
   for (pos, vel) in entities:
     pos.x += vel.x
@@ -154,6 +170,18 @@ proc appAddComp() {.necsus([~spawnPosVel, ~addComponent], newNecsusConf(entitySi
 proc appRemoveComp() {.necsus([~spawnPosVelAccel, ~removeComponent], newNecsusConf(entitySize = 100_000)).}
 proc appAddRemoveComp() {.necsus([~spawnPosVel, ~addRemoveComponent], newNecsusConf(entitySize = 100_000)).}
 proc appHetero() {.necsus([~spawnHetero, ~move], newNecsusConf(entitySize = 100_000)).}
+
+proc appChurn() {.necsus(
+  [~spawnChurnWorld, ~move],
+  newNecsusConf(ChurnCapacity, ChurnEntityCount, eagerAlloc = true)
+).}
+
+proc newChurnWorld(churned: bool): auto =
+  churnThisApp = churned
+  initAppChurn()
+
+proc churnIterate[T](app: var T) =
+  app.tick()
 
 # =========================
 # Benchmarks
@@ -288,6 +316,8 @@ proc runNecsusBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+
+  addChurnRows(suite, "Necsus")
 
   blackBox(readSink)
 

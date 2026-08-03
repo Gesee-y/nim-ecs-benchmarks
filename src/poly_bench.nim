@@ -4,7 +4,7 @@ import ../libs/polymorph/src/polymorph
 # =========================
 # Benchmark template
 # =========================
-include "benchmarks.nim"
+import benchmarks
 
 const SAMPLE = 1000
 const WARMUP = 1

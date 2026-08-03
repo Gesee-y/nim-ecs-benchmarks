@@ -8,6 +8,8 @@ let metrics = @[
   "add remove component",
   "iteration",
   "heterogeneous iter",
+  "pristine iter",
+  "churn iter",
   "read",
   "write"
 ]

@@ -4,7 +4,7 @@ include ../libs/Cruise/src/ecs/table
 # =========================
 # Benchmark template
 # =========================
-include "benchmarks.nim"
+import benchmarks, churn_common
 
 const
   Samples = 1000
@@ -87,6 +87,31 @@ proc setupWorldHetero(): ECSWorld =
 # ---------------------------------
 # Entity creation
 # ---------------------------------
+
+proc churnSpawn(w: var ECSWorld): SparseHandle =
+  w.createSparseEntity(Position, Velocity)
+
+proc churnDestroy(w: var ECSWorld; entity: var SparseHandle) =
+  w.deleteEntity(entity)
+
+proc newChurnWorld(churned: bool): ECSWorld =
+  result = setupWorld()
+  result.populateChurn(churned)
+
+proc churnIterate(w: var ECSWorld) =
+  var posc = w.get(Position)
+  let velc = w.get(Velocity)
+
+  for (sid, r) in w.sparseQuery(query(w, Position and Velocity)):
+    let bid = posc.toSparse[sid]-1
+    var x = addr posc.sparse[bid].data.x
+    let dx = addr velc.sparse[bid].data.x
+    var y = addr posc.sparse[bid].data.y
+    let dy = addr velc.sparse[bid].data.y
+
+    for i in r:
+      x[i] += dx[i]
+      y[i] += dy[i]
 
 proc runSparseBenchmarks() =
   var suite = initSuite("Cruise Sparse")
@@ -322,6 +347,8 @@ proc runSparseBenchmarks() =
   # ==============================
   # Results
   # ==============================
+  addChurnRows(suite, "Cruise Sparse")
+
   suite.showSummary()
   suite.saveSummary("cr_sparse")
 
