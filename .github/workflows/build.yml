@@ -5,8 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      with:
-        submodules: true
+    # Not using checkout's `submodules` option: it runs `git submodule foreach
+    # --recursive`, which fails because Cruise's .gitmodules points at
+    # `externalLibs/sdl3` while its gitlink is at `externalLib/sdl3`. We only
+    # need the direct submodules, so init them without recursing.
+    - run: git submodule update --init
     - uses: iffy/install-nim@v5
     - run: git config --global --add safe.directory "$(pwd)"
     - run: nim r src/all_benchmarks.nim

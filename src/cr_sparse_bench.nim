@@ -1,5 +1,5 @@
 import times, math, random#, nimprof
-include "../libs/CruiseECS/table.nim"
+include ../libs/Cruise/src/ecs/table
 
 # =========================
 # Benchmark template
@@ -169,7 +169,7 @@ proc runSparseBenchmarks() =
     (
       var w = setupWorld()
       var ents:seq[SparseHandle] = w.createSparseEntities(ENTITY_COUNT, Position, Velocity)
-      
+
       for e in ents.mitems:
         w.deleteEntity(e)
     ),
@@ -201,7 +201,7 @@ proc runSparseBenchmarks() =
     "add component",
     Samples,
     Warmup,
-    ( 
+    (
       var w = setupWorld()
       var ents = w.createSparseEntities(ENTITY_COUNT,Position)
       for e in ents.mitems:
@@ -287,7 +287,7 @@ proc runSparseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
-  
+
   var s = 0'f32
   suite.add benchmarkWithSetup(
     "read",
