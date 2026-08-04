@@ -1,4 +1,4 @@
-import times, math, tables, options
+import times, math, tables, options, random
 import ../libs/Necsus/src/necsus
 
 # =========================
@@ -9,6 +9,7 @@ include "benchmarks.nim"
 const SAMPLE = 1000
 const WARMUP = 1
 const ENTITY_COUNT = 10000
+const SELECTION_THRESHOLD = 0.1
 
 # =========================
 # Components
@@ -21,6 +22,24 @@ type
     x, y: float32
   Acceleration = object
     x, y: float32
+
+  Tag = object
+  Rotation {.accessory.} = object
+    angle: float32
+  Scale {.accessory.} = object
+    sx, sy: float32
+  Mass {.accessory.} = object
+    value: float32
+  Force {.accessory.} = object
+    fx, fy: float32
+  Torque {.accessory.} = object
+    value: float32
+  Energy {.accessory.} = object
+    value: float32
+  Friction {.accessory.} = object
+    coef: float32
+
+var rng = initRand(42)
 
 # Accumulator that outlives the benchmark so reads can't be optimised away
 var readSink = 0'f32
@@ -47,6 +66,32 @@ proc spawnPosVelAccel(spawn: Spawn[(Position, Velocity, Acceleration)]) {.startu
     spawn.with(
       Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0), Acceleration(x: 1.0, y: 1.0)
     )
+
+proc spawnHetero(
+  spawn: FullSpawn[(Tag, )],
+  addPos: Attach[(Position, )],
+  addVel: Attach[(Velocity, )],
+  addAccel: Attach[(Acceleration, )],
+  addRot: Attach[(Rotation, )],
+  addScale: Attach[(Scale, )],
+  addMass: Attach[(Mass, )],
+  addForce: Attach[(Force, )],
+  addTorque: Attach[(Torque, )],
+  addEnergy: Attach[(Energy, )],
+  addFriction: Attach[(Friction, )]
+) {.startupSys.} =
+  for _ in 0..<ENTITY_COUNT:
+    let eid = spawn.with(Tag())
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addPos(eid, (Position(x: 1.0, y: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addVel(eid, (Velocity(x: 1.0, y: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addAccel(eid, (Acceleration(x: 1.0, y: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addRot(eid, (Rotation(angle: 0.5), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addScale(eid, (Scale(sx: 1.0, sy: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addMass(eid, (Mass(value: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addForce(eid, (Force(fx: 1.0, fy: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addTorque(eid, (Torque(value: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addEnergy(eid, (Energy(value: 1.0), ))
+    if rng.rand(1.0) < SELECTION_THRESHOLD: addFriction(eid, (Friction(coef: 0.5), ))
 
 proc createEntities(spawn: Spawn[(Position, Velocity)]) {.loopSys.} =
   for _ in 0..<ENTITY_COUNT:
@@ -108,6 +153,7 @@ proc appWrite() {.necsus([~spawnTrackedPos, ~writeSystem], newNecsusConf(entityS
 proc appAddComp() {.necsus([~spawnPosVel, ~addComponent], newNecsusConf(entitySize = 100_000)).}
 proc appRemoveComp() {.necsus([~spawnPosVelAccel, ~removeComponent], newNecsusConf(entitySize = 100_000)).}
 proc appAddRemoveComp() {.necsus([~spawnPosVel, ~addRemoveComponent], newNecsusConf(entitySize = 100_000)).}
+proc appHetero() {.necsus([~spawnHetero, ~move], newNecsusConf(entitySize = 100_000)).}
 
 # =========================
 # Benchmarks
@@ -222,6 +268,20 @@ proc runNecsusBenchmarks() =
     WARMUP,
     (
       var app = initAppAddRemoveComp()
+    ),
+    (
+      app.tick()
+    )
+  )
+  showDetailed(suite.benchmarks[^1])
+
+  # 9. Heterogeneous iteration
+  suite.add benchmarkWithSetup(
+    "heterogeneous iter",
+    SAMPLE,
+    WARMUP,
+    (
+      var app = initAppHetero()
     ),
     (
       app.tick()
