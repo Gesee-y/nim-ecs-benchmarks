@@ -2,3 +2,4 @@
 *.csv
 src/*_bench
 bench_runner
+site/

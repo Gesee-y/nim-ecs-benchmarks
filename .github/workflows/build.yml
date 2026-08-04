@@ -1,15 +1,29 @@
 name: Build
-on: [push]
+
+on: [push, workflow_dispatch]
+
+permissions:
+  contents: read
+
 jobs:
-  build:
+  benchmark:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-    - uses: actions/checkout@v3
-    # Not using checkout's `submodules` option: it runs `git submodule foreach
-    # --recursive`, which fails because Cruise's .gitmodules points at
-    # `externalLibs/sdl3` while its gitlink is at `externalLib/sdl3`. We only
-    # need the direct submodules, so init them without recursing.
+    - uses: actions/checkout@v4
     - run: git submodule update --init
     - uses: iffy/install-nim@v5
+      with:
+        version: '2.2.10'
     - run: git config --global --add safe.directory "$(pwd)"
     - run: ./run_benchmarks.sh
+
+    - name: Publish summary
+      run: |
+        {
+          echo '### Benchmark results'
+          echo ''
+          echo '```'
+          cat site/summary.txt
+          echo '```'
+        } >> "$GITHUB_STEP_SUMMARY"

@@ -1,6 +1,8 @@
 import std/[os, algorithm]
 import report/[parser, output_table]
 
+const siteDir = "site"
+
 proc csvFiles(): seq[string] =
   result = commandLineParams()
   if result.len > 0:
@@ -16,5 +18,10 @@ if report.suites.len == 0:
   echo "No benchmark CSVs found"
   quit(1)
 
+let table = renderTable(report)
+
 echo ""
-echo renderTable(report)
+echo table
+
+createDir(siteDir)
+writeFile(siteDir / "summary.txt", table & "\n")
