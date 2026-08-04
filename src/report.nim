@@ -1,5 +1,5 @@
 import std/[os, algorithm]
-import report/[parser, output_table]
+import report/[parser, output_table, output_svg]
 
 const siteDir = "site"
 
@@ -25,3 +25,4 @@ echo table
 
 createDir(siteDir)
 writeFile(siteDir / "summary.txt", table & "\n")
+writeFile(siteDir / "benchmarks.svg", renderSvg(report) & "\n")
