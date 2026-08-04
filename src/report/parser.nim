@@ -1,5 +1,16 @@
 import std/[strutils, tables]
 
+const architectures = {
+  "Cruise Dense": "Archetype",
+  "Cruise Sparse": "Sparse set",
+  "Easyess": "Bitset/table",
+  "MiniECS": "Sparse set",
+  "Necsus": "Framework",
+  "Pirata": "Preallocated",
+  "Polymorph": "Generative",
+  "Vecs": "Archetype",
+}.toTable
+
 const metricOrder* = [
   "iteration",
   "heterogeneous iter",
@@ -25,6 +36,7 @@ type
 
   Suite* = object
     name*: string
+    architecture*: string ## How the library is built, where it is known
     measurements*: Table[string, Measurement]
 
   Report* = object
@@ -40,6 +52,7 @@ proc parseSuite*(csv: string): Suite =
   let lines = csv.splitLines()
 
   result.name = lines[0].split(',')[0].strip()
+  result.architecture = architectures.getOrDefault(result.name, "")
 
   for line in lines[1..^1]:
     let parts = line.split(',')
