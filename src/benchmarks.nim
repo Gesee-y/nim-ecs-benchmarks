@@ -309,9 +309,13 @@ proc saveSummary*(suite: BenchmarkSuite, name: string) =
   var file = open(name & ".csv", fmWrite)
   defer: file.close()
 
-  file.writeLine(suite.name & ",time_median,mem_median")
+  file.writeLine(suite.name & ",time_median,mem_median,time_seconds,mem_bytes")
 
   for bench in suite.benchmarks:
     let mem = prettyMem(bench.memStats.median)
     let time = prettyTime(bench.timeStats.median)
-    file.writeLine(bench.name & "," & time & "," & mem)
+    file.writeLine(
+      bench.name & "," & time & "," & mem & "," &
+      bench.timeStats.median.formatFloat(ffScientific, 10) & "," &
+      bench.memStats.median.formatFloat(ffScientific, 10)
+    )

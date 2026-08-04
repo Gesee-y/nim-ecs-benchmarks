@@ -19,7 +19,7 @@ let labelWidth = 4
 let valueWidth = 10
 let winnerMark = "*"
 
-type Cell = tuple[time, mem: string]
+type Cell = tuple[time, mem: string, seconds, bytes: float]
 
 var comparisons = Table[string, Table[string, Cell]]()
 var suiteOrder: seq[string] = @[]
@@ -51,29 +51,12 @@ proc line(name, label: string, values: seq[tuple[value: string, won: bool]]): st
     let mark = if won: winnerMark else: " "
     result &= " " & unicode.align(value, valueWidth) & " " & mark & " ║"
 
-proc toNumber(value: string, units: openArray[(string, float)]): float =
-  ## Turns a formatted measurement ("12.34 µs", "1.41 MB") back into a comparable number.
-  let parts = strutils.splitWhitespace(value)
-  if parts.len != 2:
-    return Inf
-
-  var scale = Inf
-  for (suffix, factor) in units:
-    if parts[1] == suffix:
-      scale = factor
-  if scale == Inf:
-    return Inf
-
+proc toNumber(value: string): float =
+  ## Reads one of the raw CSV columns. Anything unparseable sorts last.
   try:
-    return parseFloat(parts[0]) * scale
+    return parseFloat(value.strip())
   except ValueError:
     return Inf
-
-proc toSeconds(time: string): float =
-  time.toNumber({"ns": 1e-9, "µs": 1e-6, "ms": 1e-3, "s": 1.0})
-
-proc toBytes(mem: string): float =
-  mem.toNumber({"B": 1.0, "KB": 1024.0, "MB": 1024.0 * 1024.0})
 
 proc winners(values: Table[string, float]): HashSet[string] =
   ## The suites tied for the lowest value. A metric only one suite reports is
@@ -112,10 +95,18 @@ for csvFile in walkFiles("*.csv"):
       continue
 
     let parts = line.split(',')
+    if parts.len < 5:
+      continue
+
     let metric = parts[0]
 
     if metric in comparisons:
-      comparisons[metric][bench] = (time: parts[1].strip(), mem: parts[2].strip())
+      comparisons[metric][bench] = (
+        time: parts[1].strip(),
+        mem: parts[2].strip(),
+        seconds: parts[3].toNumber,
+        bytes: parts[4].toNumber
+      )
 
 echo ""
 echo rule("╔", "╗", "╦", "═", suiteOrder.len)
@@ -127,8 +118,8 @@ for index, metric in metrics:
   var memValues = Table[string, float]()
 
   for suite, results in comparisons[metric]:
-    timeValues[suite] = results.time.toSeconds
-    memValues[suite] = results.mem.toBytes
+    timeValues[suite] = results.seconds
+    memValues[suite] = results.bytes
 
   let timeWinners = winners(timeValues)
   let memWinners = winners(memValues)
