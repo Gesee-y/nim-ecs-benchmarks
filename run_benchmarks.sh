@@ -11,4 +11,4 @@ for src in src/*_bench.nim; do
     fi
 done
 
-nim r src/results.nim
+nim r src/report.nim

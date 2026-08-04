@@ -71,6 +71,6 @@ Ensure you have Nim installed and the libraries located in the `libs/` folder.
     ```
 4.  **Re-render the comparison table** from CSVs that already exist:
     ```bash
-    nim r src/results.nim          # every *.csv in the current directory
-    nim r src/results.nim results/*.csv
+    nim r src/report.nim          # every *.csv in the current directory
+    nim r src/report.nim results/*.csv
     ```
