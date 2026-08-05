@@ -3,3 +3,6 @@
 src/*_bench
 bench_runner
 site/
+nimble.develop
+nimble.paths
+nimbledeps
