@@ -34,6 +34,7 @@ var rng = initRand(42)
 
 # Accumulator that outlives the benchmark so reads can't be optimised away
 var readSink = 0'f32
+var iterCount = 0
 
 # Handles captured while the world is built, so the random access benchmarks can
 # index by entity the way every other suite does
@@ -73,16 +74,20 @@ proc spawnHetero(
 ) {.startupSys.} =
   for _ in 0..<ENTITY_COUNT:
     let eid = spawn.with(Tag())
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addPos(eid, (Position(x: 1.0, y: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addVel(eid, (Velocity(x: 1.0, y: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addAccel(eid, (Acceleration(x: 1.0, y: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addRot(eid, (Rotation(angle: 0.5), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addScale(eid, (Scale(sx: 1.0, sy: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addMass(eid, (Mass(value: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addForce(eid, (Force(fx: 1.0, fy: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addTorque(eid, (Torque(value: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addEnergy(eid, (Energy(value: 1.0), ))
-    if rng.rand(1.0) < SELECTION_THRESHOLD: addFriction(eid, (Friction(coef: 0.5), ))
+    for i in 0..<10:
+      if rng.rand(1.0) < SELECTION_THRESHOLD:
+        case i:
+        of 0: addPos(eid, (Position(x: 1.0, y: 1.0), ))
+        of 1: addVel(eid, (Velocity(x: 1.0, y: 1.0), ))
+        of 2: addAccel(eid, (Acceleration(x: 1.0, y: 1.0), ))
+        of 3: addRot(eid, (Rotation(angle: 0.5), ))
+        of 4: addScale(eid, (Scale(sx: 1.0, sy: 1.0), ))
+        of 5: addMass(eid, (Mass(value: 1.0), ))
+        of 6: addForce(eid, (Force(fx: 1.0, fy: 1.0), ))
+        of 7: addTorque(eid, (Torque(value: 1.0), ))
+        of 8: addEnergy(eid, (Energy(value: 1.0), ))
+        of 9: addFriction(eid, (Friction(coef: 0.5), ))
+        else: continue
 
 proc createEntities(spawn: Spawn[(Position, Velocity)]) {.loopSys.} =
   for _ in 0..<ENTITY_COUNT:
@@ -309,7 +314,6 @@ proc runNecsusBenchmarks() =
   showDetailed(suite.benchmarks[^1])
 
   addChurnRows(suite, "Necsus")
-
   blackBox(readSink)
 
   suite.showSummary()
