@@ -1,6 +1,7 @@
 [submodule "libs/Cruise"]
 	path = libs/Cruise
 	url = https://github.com/Gesee-y/Cruise
+	branch = undertale-engine
 [submodule "libs/miniecs"]
 	path = libs/miniecs
 	url = https://github.com/erayzesen/miniecs
