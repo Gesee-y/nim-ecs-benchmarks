@@ -58,7 +58,7 @@ proc setupWorldNoEnt(): ECSWorld =
 # ---------------------------------
 
 proc churnSpawn(w: var ECSWorld): DenseHandle =
-  w.createEntity(Position, Velocity)
+  w.createTEntity(Position, Velocity)
 
 proc churnDestroy[T](w: var ECSWorld; entity: var TDHandle[T]) =
   w.deleteEntity(entity)

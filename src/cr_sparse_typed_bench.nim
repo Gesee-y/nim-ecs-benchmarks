@@ -50,7 +50,7 @@ proc setupWorldHetero(): ECSWorld =
 # ---------------------------------
 
 proc churnSpawn(w: var ECSWorld): SparseHandle =
-  w.createSparseEntity(Position, Velocity)
+  w.createTSparseEntity(Position, Velocity)
 
 proc churnDestroy[T](w: var ECSWorld; entity: var TSHandle[T]) =
   w.deleteEntity(entity)
