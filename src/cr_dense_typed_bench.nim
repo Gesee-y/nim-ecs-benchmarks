@@ -57,7 +57,7 @@ proc setupWorldNoEnt(): ECSWorld =
 # Entity creation
 # ---------------------------------
 
-proc churnSpawn(w: var ECSWorld): DenseHandle =
+template churnSpawn(w: var ECSWorld): untyped =
   w.createTEntity(Position, Velocity)
 
 proc churnDestroy[T](w: var ECSWorld; entity: var TDHandle[T]) =
