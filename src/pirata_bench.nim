@@ -3,12 +3,9 @@ import random, common
 
 import benchmarks, churn_common
 
-const
-  sample = 1000
-  warmup = 0
-  entityCount = 10000
-  worldCapacity = entityCount * 2
-  SELECTION_THRESHOLD = 0.1
+const worldCapacity = ENTITY_COUNT * 2
+  ## Every other knob comes from `common`, so `-d:SAMPLE` and friends reach this
+  ## suite the same way they reach the rest.
 
 type
   ComponentKind = enum
@@ -73,9 +70,9 @@ proc initWorld(): PirataWorld[ComponentKind] =
 proc spawnEntities(
     world: var PirataWorld[ComponentKind]; entities: var seq[Entity];
     withPosition, withVelocity: bool) =
-  entities.setLen(entityCount)
+  entities.setLen(ENTITY_COUNT)
 
-  for i in 0..<entityCount:
+  for i in 0..<ENTITY_COUNT:
     let entity = world.spawn()
     entities[i] = entity
 
@@ -88,18 +85,17 @@ proc spawnEntities(
 proc runPirataBenchmarks() =
   var suite = initSuite("Pirata")
 
-  var sHetero = 0.0
   suite.add benchmarkWithSetup(
     "heterogeneous iter",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorldHetero()
       var rng = initRand(42)
       var entities: seq[Entity]
-      entities.setLen(entityCount)
+      entities.setLen(ENTITY_COUNT)
 
-      for i in 0..<entityCount:
+      for i in 0..<ENTITY_COUNT:
         let e = world.spawn()
         entities[i] = e
 
@@ -116,20 +112,18 @@ proc runPirataBenchmarks() =
     (
       for entity in world.query({hkPosition, hkVelocity}):
         let velocity = world.fetch(entity, hkVelocity, Velocity)
-        var position = world.fetch(entity, hkPosition, Position)
+        let position = addr world.fetch(entity, hkPosition, Position)
         position.x += velocity.x
         position.y += velocity.y
-        sHetero += 1
     )
   )
   showDetailed(suite.benchmarks[^1])
-  blackBox(sHetero)
 
 
   suite.add benchmarkWithSetup(
     "create entity",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -138,12 +132,12 @@ proc runPirataBenchmarks() =
       spawnEntities(world, entities, withPosition = true, withVelocity = true)
     )
   )
-  showDetailed(suite.benchmarks[0])
+  showDetailed(suite.benchmarks[^1])
 
   suite.add benchmarkWithSetup(
     "delete entity",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -154,12 +148,12 @@ proc runPirataBenchmarks() =
         world.destroy(entity)
     )
   )
-  showDetailed(suite.benchmarks[1])
+  showDetailed(suite.benchmarks[^1])
 
   suite.add benchmarkWithSetup(
     "add component",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -170,12 +164,12 @@ proc runPirataBenchmarks() =
         world.add(entity, ckVelocity, Velocity(x: 1.0, y: 1.0))
     )
   )
-  showDetailed(suite.benchmarks[2])
+  showDetailed(suite.benchmarks[^1])
 
   suite.add benchmarkWithSetup(
     "remove component",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -186,12 +180,12 @@ proc runPirataBenchmarks() =
         world.remove(entity, ckVelocity)
     )
   )
-  showDetailed(suite.benchmarks[3])
+  showDetailed(suite.benchmarks[^1])
 
   suite.add benchmarkWithSetup(
     "add remove component",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -203,13 +197,12 @@ proc runPirataBenchmarks() =
         world.remove(entity, ckVelocity)
     )
   )
-  showDetailed(suite.benchmarks[4])
+  showDetailed(suite.benchmarks[^1])
 
-  var s = 0.0
   suite.add benchmarkWithSetup(
     "iteration",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -218,20 +211,18 @@ proc runPirataBenchmarks() =
     (
       for entity in world.query({ckPosition, ckVelocity}):
         let velocity = world.fetch(entity, ckVelocity, Velocity)
-        var position = world.fetch(entity, ckPosition, Position)
+        let position = addr world.fetch(entity, ckPosition, Position)
         position.x += velocity.x
         position.y += velocity.y
-        s += velocity.x
     )
   )
-  showDetailed(suite.benchmarks[5])
-  blackBox(s)
+  showDetailed(suite.benchmarks[^1])
 
   var sum = 0'f32
   suite.add benchmarkWithSetup(
     "read",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -242,13 +233,13 @@ proc runPirataBenchmarks() =
         sum += world.fetch(entity, ckPosition, Position).x
     )
   )
-  showDetailed(suite.benchmarks[6])
+  showDetailed(suite.benchmarks[^1])
   blackBox(sum)
 
   suite.add benchmarkWithSetup(
     "write",
-    sample,
-    warmup,
+    SAMPLE,
+    WARMUP,
     (
       var world = initWorld()
       var entities: seq[Entity] = @[]
@@ -256,13 +247,12 @@ proc runPirataBenchmarks() =
     ),
     (
       for entity in entities:
-        var position = world.fetch(entity, ckPosition, Position)
+        let position = addr world.fetch(entity, ckPosition, Position)
         position.x = sum
         position.y = sum
-        sum += 1
     )
   )
-  showDetailed(suite.benchmarks[7])
+  showDetailed(suite.benchmarks[^1])
   blackBox(sum)
 
   addChurnRows(suite, "Pirata")
