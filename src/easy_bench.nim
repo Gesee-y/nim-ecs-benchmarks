@@ -229,6 +229,7 @@ proc runEasyBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  blackBox(s)
 
   # ------------------------------
   # Write
@@ -251,6 +252,7 @@ proc runEasyBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  blackBox(s)
 
   var rng = initRand(42)
 

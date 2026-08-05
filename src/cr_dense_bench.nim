@@ -274,7 +274,7 @@ proc runDenseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
-  echo ss
+  blackBox(ss)
 
   var s = 0'f32
   suite.add benchmarkWithSetup(
@@ -293,6 +293,7 @@ proc runDenseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  blackBox(s)
 
   suite.add benchmarkWithSetup(
     "write",
@@ -309,6 +310,7 @@ proc runDenseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  blackBox(s)
 
   suite.add benchmarkWithSetup(
     "add component",

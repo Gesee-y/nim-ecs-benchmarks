@@ -123,7 +123,7 @@ proc runPirataBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
-  echo sHetero
+  blackBox(sHetero)
 
 
   suite.add benchmarkWithSetup(
@@ -225,7 +225,7 @@ proc runPirataBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[5])
-  echo s
+  blackBox(s)
 
   var sum = 0'f32
   suite.add benchmarkWithSetup(
@@ -243,7 +243,7 @@ proc runPirataBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[6])
-  echo sum
+  blackBox(sum)
 
   suite.add benchmarkWithSetup(
     "write",
@@ -263,7 +263,7 @@ proc runPirataBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[7])
-  echo sum
+  blackBox(sum)
 
   addChurnRows(suite, "Pirata")
 

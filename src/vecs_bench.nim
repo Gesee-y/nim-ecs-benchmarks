@@ -169,6 +169,7 @@ proc runVecsBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[6])
+  blackBox(s)
 
   # ------------------------------
   # Write
@@ -191,6 +192,7 @@ proc runVecsBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[7])
+  blackBox(s)
 
   var rng = initRand(42)
   suite.add benchmarkWithSetup(

@@ -204,6 +204,7 @@ proc runPolyBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  blackBox(s)
 
   # 8. Write
   suite.add benchmarkWithSetup(
@@ -221,6 +222,7 @@ proc runPolyBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  blackBox(s)
 
   var rng = initRand(42)
 
