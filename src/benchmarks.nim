@@ -276,8 +276,8 @@ template benchmarkWithSetup*(benchmarkName: string, sample, warm,
       code
 
     for i in 0..<sample:
-      let memBaseline = getOccupiedMem()
       setup
+      let memBaseline = getOccupiedMem()
       measure(bench, memBaseline):
         code
 
