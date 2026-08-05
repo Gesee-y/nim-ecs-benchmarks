@@ -236,16 +236,16 @@ proc runDenseBenchmarks() =
         for compId in optional:
           if rng.rand(1.0) < SELECTION_THRESHOLD:
             case compId:
-              of 0: discard w.addComponent(e, Position)
-              of 1: discard w.addComponent(e, Velocity)
-              of 2: discard w.addComponent(e, Acceleration)
-              of 3: discard w.addComponent(e, Rotation)
-              of 4: discard w.addComponent(e, Scale)
-              of 5: discard w.addComponent(e, Mass)
-              of 6: discard w.addComponent(e, Friction)
-              of 7: discard w.addComponent(e, Bounce)
-              of 8: discard w.addComponent(e, Lifetime)
-              of 9: discard w.addComponent(e, Energy)
+              of 0: w.addComponent(e, Position)
+              of 1: w.addComponent(e, Velocity)
+              of 2: w.addComponent(e, Acceleration)
+              of 3: w.addComponent(e, Rotation)
+              of 4: w.addComponent(e, Scale)
+              of 5: w.addComponent(e, Mass)
+              of 6: w.addComponent(e, Friction)
+              of 7: w.addComponent(e, Bounce)
+              of 8: w.addComponent(e, Lifetime)
+              of 9: w.addComponent(e, Energy)
               else: continue
 
       var posc = w.get(Position)
