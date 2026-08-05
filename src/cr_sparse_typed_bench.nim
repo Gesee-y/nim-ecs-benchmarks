@@ -26,6 +26,15 @@ proc setupWorld(): ECSWorld =
 
   return world
 
+proc setupWorldNoEnt(): ECSWorld =
+  var world = newECSWorld()
+
+  let posID = world.registerComponent(Position)
+  let velID = world.registerComponent(Velocity)
+  let accID = world.registerComponent(Acceleration)
+
+  return world
+
 proc setupWorldHetero(): ECSWorld =
   var world = newECSWorld()
   discard world.registerComponent(Position)
