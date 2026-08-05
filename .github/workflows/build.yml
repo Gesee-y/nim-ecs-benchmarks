@@ -17,7 +17,7 @@ jobs:
         version: '2.2.10'
     - run: git config --global --add safe.directory "$(pwd)"
     - run: sudo apt-get update
-    - run: sudo apt-get install -y libcairo2 liblapack3 liblapack-dev libopenblas-dev
+    - run: sudo apt-get install -y clang libcairo2 liblapack3 liblapack-dev libopenblas-dev
     - run: nimble install --depsOnly
     - run: ./run_benchmarks.sh
 
