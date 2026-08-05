@@ -289,6 +289,7 @@ proc runSparseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  echo s
 
   suite.add benchmarkWithSetup(
     "write",

@@ -291,11 +291,9 @@ proc runDenseBenchmarks() =
         for i in r:
           x[i] += dx[i]
           y[i] += dy[i]
-          ss += 1
     )
   )
   showDetailed(suite.benchmarks[^1])
-  echo ss
 
   var s = 0'f32
   suite.add benchmarkWithSetup(

@@ -217,7 +217,7 @@ proc runDenseBenchmarks() =
       var w = setupWorldHetero()
       var rng = initRand(42)
 
-      var ents = w.createTEntities(ENTITY_COUNT)
+      var ents = w.createEntities(ENTITY_COUNT)
 
       let optional = [
         Position.toComponentId,
@@ -265,11 +265,9 @@ proc runDenseBenchmarks() =
         for i in r:
           x[i] += dx[i]
           y[i] += dy[i]
-          ss += 1
     )
   )
   showDetailed(suite.benchmarks[^1])
-  echo ss
 
   var s = 0'f32
   suite.add benchmarkWithSetup(
