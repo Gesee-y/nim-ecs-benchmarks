@@ -33,12 +33,6 @@ register defaultCompOpts:
     Friction = object
       coef: float32
 
-makeSystem "movementHetero", [Position, Velocity]:
-  all:
-    position.x += velocity.x
-    position.y += velocity.y
-
-
 # =========================
 # Systems
 # =========================
@@ -54,119 +48,116 @@ makeSystem "movement", [Position, Velocity]:
 
 makeEcs()
 commitSystems "runMovement"
-commitSystems "runMovementHetero"
 
 # =========================
 # Benchmarks
 # =========================
 
+template reset(ents: var seq[EntityRef]) =
+  for e in ents:
+    if e.alive:
+      e.delete()
+  ents.setLen(0)
+
 proc runPolyBenchmarks() =
   var suite = initSuite("Polymorph")
 
   # 1. Create Entity
+  var entsCreate: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "create entity",
     SAMPLE,
     WARMUP,
     (
-      # We can't actually recreate the ECS types since it's generative.
-      # But we can clean up entities if needed.
-      # For creation, we just create them.
-      var ents: seq[EntityRef]
+      entsCreate.reset()
     ),
     (
       for i in 0..<ENTITY_COUNT:
-        ents.add newEntityWith(
+        entsCreate.add newEntityWith(
           Position(x: 1.0, y: 1.0),
           Velocity(x: 1.0, y: 1.0)
         )
-      # Cleanup after each sample to avoid memory overflow
-      for e in ents: e.delete()
-      ents.setLen(0)
     )
   )
   showDetailed(suite.benchmarks[^1])
+  entsCreate.reset()
 
   # 2. Delete Entity
+  var entsDelete: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "delete entity",
     SAMPLE,
     WARMUP,
     (
-      var ents: seq[EntityRef]
+      entsDelete.reset();
       for i in 0..<ENTITY_COUNT:
-        ents.add newEntityWith(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
+        entsDelete.add newEntityWith(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
     ),
     (
-      for e in ents:
+      for e in entsDelete:
         e.delete()
     )
   )
   showDetailed(suite.benchmarks[^1])
+  entsDelete.reset()
 
   # 3. Add Component
+  var entsAdd: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "add component",
     SAMPLE,
     WARMUP,
     (
-      var ents: seq[EntityRef]
+      entsAdd.reset();
       for i in 0..<ENTITY_COUNT:
-        ents.add newEntityWith(Position(x: 1.0, y: 1.0))
+        entsAdd.add newEntityWith(Position(x: 1.0, y: 1.0))
     ),
     (
-      for e in ents:
+      for e in entsAdd:
         e.addComponent Velocity(x: 1.0, y: 1.0)
-
-      # Cleanup: remove component for next sample or delete entity
-      # Actually it's easier to just delete entity in teardown if needed.
-      # But here we just want to measure add.
-      for e in ents: e.delete()
-      ents.setLen(0)
     )
   )
   showDetailed(suite.benchmarks[^1])
+  entsAdd.reset()
 
   # 4. Remove Component
+  var entsRemove: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "remove component",
     SAMPLE,
     WARMUP,
     (
-      var ents: seq[EntityRef]
+      entsRemove.reset();
       for i in 0..<ENTITY_COUNT:
-        ents.add newEntityWith(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
+        entsRemove.add newEntityWith(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
     ),
     (
-      for e in ents:
+      for e in entsRemove:
         e.removeComponent Velocity
-
-      for e in ents: e.delete()
-      ents.setLen(0)
     )
   )
   showDetailed(suite.benchmarks[^1])
+  entsRemove.reset()
 
   # 5. Add + Remove Component
+  var entsAddRemove: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "add remove component",
     SAMPLE,
     WARMUP,
     (
-      var ents: seq[EntityRef]
+      entsAddRemove.reset();
       for i in 0..<ENTITY_COUNT:
-        ents.add newEntityWith(Position(x: 1.0, y: 1.0))
+        entsAddRemove.add newEntityWith(Position(x: 1.0, y: 1.0))
     ),
     (
-      for e in ents:
+      for e in entsAddRemove:
         e.addComponent Velocity(x: 1.0, y: 1.0)
         e.removeComponent Velocity
-
-      for e in ents: e.delete()
-      ents.setLen(0)
     )
   )
   showDetailed(suite.benchmarks[^1])
+  entsAddRemove.reset()
 
   # 6. Iteration
   var entsIter: seq[EntityRef]
@@ -175,9 +166,7 @@ proc runPolyBenchmarks() =
     SAMPLE,
     WARMUP,
     (
-      # Cleanup previous sample
-      for e in entsIter: e.delete()
-      entsIter.setLen(0)
+      entsIter.reset();
       for i in 0..<ENTITY_COUNT:
         entsIter.add newEntityWith(Position(x: 1.0, y: 1.0), Velocity(x: 1.0, y: 1.0))
     ),
@@ -186,52 +175,58 @@ proc runPolyBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  entsIter.reset()
 
   # 7. Read
   var s = 0'f32
+  var entsRead: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "read",
     SAMPLE,
     WARMUP,
     (
-      var ents: seq[EntityRef]
+      entsRead.reset();
       for i in 0..<ENTITY_COUNT:
-        ents.add newEntityWith(Position(x: 1.0, y: 1.0))
+        entsRead.add newEntityWith(Position(x: 1.0, y: 1.0))
     ),
     (
-      for e in ents:
+      for e in entsRead:
         s += e.fetchComponent(Position).x
     )
   )
   showDetailed(suite.benchmarks[^1])
   blackBox(s)
+  entsRead.reset()
 
   # 8. Write
+  var entsWrite: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "write",
     SAMPLE,
     WARMUP,
     (
-      var ents: seq[EntityRef]
+      entsWrite.reset();
       for i in 0..<ENTITY_COUNT:
-        ents.add newEntityWith(Position(x: 1.0, y: 1.0))
+        entsWrite.add newEntityWith(Position(x: 1.0, y: 1.0))
     ),
     (
-      for e in ents:
+      for e in entsWrite:
         e.fetchComponent(Position).x = s
     )
   )
   showDetailed(suite.benchmarks[^1])
   blackBox(s)
+  entsWrite.reset()
 
   var rng = initRand(42)
 
+  var entsHetero: seq[EntityRef]
   suite.add benchmarkWithSetup(
     "heterogeneous iter",
     SAMPLE,
     WARMUP,
     (
-      var entsHetero: seq[EntityRef]
+      entsHetero.reset();
       for i in 0..<ENTITY_COUNT:
         let e = newEntity()
         for j in 0..<10:
@@ -255,6 +250,7 @@ proc runPolyBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
+  entsHetero.reset()
 
   suite.showSummary()
   suite.saveSummary("poly")

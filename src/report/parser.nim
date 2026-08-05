@@ -65,11 +65,13 @@ proc parseSuite*(csv: string): Suite =
     if metric notin metricOrder:
       continue
 
+    let bytes = parts[4].toNumber
+
     result.measurements[metric] = Measurement(
       time: parts[1].strip(),
-      mem: parts[2].strip(),
+      mem: if bytes > 0: parts[2].strip() else: "-",
       seconds: parts[3].toNumber,
-      bytes: parts[4].toNumber
+      bytes: bytes
     )
 
 proc best(values: openArray[float]): float =
