@@ -122,7 +122,7 @@ proc runSparseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
-  blackBox(ss)
+  echo ss
   # ------------------------------
   # Create single sparse entity
   # ------------------------------
@@ -289,7 +289,6 @@ proc runSparseBenchmarks() =
     )
   )
   showDetailed(suite.benchmarks[^1])
-  blackBox(s)
 
   suite.add benchmarkWithSetup(
     "write",
@@ -301,11 +300,10 @@ proc runSparseBenchmarks() =
       var ents = w.createSparseEntities(ENTITY_COUNT, Position)),
     (
       for e in ents:
-        posc[e] = Position(x: s)
+        posc[e] = Position()
     )
   )
   showDetailed(suite.benchmarks[^1])
-  blackBox(s)
 
   # ==============================
   # Results
