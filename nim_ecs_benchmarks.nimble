@@ -10,3 +10,4 @@ bin           = @["report"]
 # Dependencies
 
 requires "nim >= 2.2.10"
+requires "ggplotnim >= 0.7.6"

@@ -16,6 +16,8 @@ jobs:
       with:
         version: '2.2.10'
     - run: git config --global --add safe.directory "$(pwd)"
+    - run: sudo apt-get install -y libcairo2
+    - run: nimble install --depsOnly
     - run: ./run_benchmarks.sh
 
     - name: Publish summary

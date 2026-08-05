@@ -22,6 +22,8 @@ between two rows of the same library, are the parts worth reading.
 
 [![Median time and memory for every benchmark across all eight ECS libraries](https://nycto.github.io/nim-ecs-benchmarks/benchmarks.svg)](https://nycto.github.io/nim-ecs-benchmarks/benchmarks.svg)
 
+[![Median time for every benchmark, one panel per metric](https://nycto.github.io/nim-ecs-benchmarks/time.svg)](https://nycto.github.io/nim-ecs-benchmarks/time.svg)
+
 ---
 
 ## Detailed Metric Explanations
@@ -124,14 +126,23 @@ before anything will compile.
     `externalLibs/sdl3` while its gitlink is at `externalLib/sdl3`, so recursing
     fails; the direct submodules are all that is needed.
 
-2.  **Compile and run a specific benchmark**:
+2.  **Install the reporting dependency**. The benchmarks themselves need
+    nothing beyond the submodules, but the report draws its charts with
+    [ggplotnim](https://github.com/Vindaar/ggplotnim), which renders through
+    Cairo:
+    ```bash
+    sudo apt-get install -y libcairo2
+    nimble install --depsOnly
+    ```
+
+3.  **Compile and run a specific benchmark**:
     ```bash
     nim c -r -d:danger src/cr_dense_bench.nim
     nim c -r -d:danger src/easy_bench.nim
     nim c -r -d:danger -p:libs/polymorph/src src/poly_bench.nim
     ```
 
-3.  **Compile and run all benchmarks**:
+4.  **Compile and run all benchmarks**:
     ```bash
     ./run_benchmarks.sh
     ```
@@ -140,7 +151,7 @@ before anything will compile.
     ./run_benchmarks.sh -d:SAMPLE=10 -d:ENTITY_COUNT=100
     ```
 
-4.  **Re-render the report** from CSVs that already exist:
+5.  **Re-render the report** from CSVs that already exist:
     ```bash
     nim r src/report.nim results/*.csv
     ```
