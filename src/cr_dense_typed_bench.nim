@@ -82,7 +82,7 @@ proc churnIterate(w: var ECSWorld) =
       y[i] += dy[i]
 
 proc runDenseBenchmarks() =
-  var suite = initSuite("Cruise Dense")
+  var suite = initSuite("Cruise Dense Typed")
 
   # ------------------------------
   # Create single sparse entity

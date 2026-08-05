@@ -84,7 +84,7 @@ proc churnIterate(w: var ECSWorld) =
       y[i] += dy[i]
 
 proc runSparseBenchmarks() =
-  var suite = initSuite("Cruise Sparse")
+  var suite = initSuite("Cruise Sparse Typed")
 
   var ss = 0
   suite.add benchmarkWithSetup(
@@ -374,10 +374,10 @@ proc runSparseBenchmarks() =
   # ==============================
   # Results
   # ==============================
-  addChurnRows(suite, "Cruise Sparse")
+  addChurnRows(suite, "Cruise Sparse Typed")
 
   suite.showSummary()
-  suite.saveSummary("cr_sparse")
+  suite.saveSummary("cr_sparse_typed")
 
 # ==============================
 # Entry point
