@@ -33,6 +33,8 @@ type
     bytes*: float   ## Median memory, for comparing against other suites
     timeWinner*: bool ## Whether this is the fastest time on its row
     memWinner*: bool  ## Whether this is the smallest memory on its row
+    timeRatio*: float ## How many times slower this is than the fastest time on its row
+    memRatio*: float  ## How many times larger this is than the smallest memory on its row
 
   Suite* = object
     name*: string
@@ -76,6 +78,13 @@ proc best(values: openArray[float]): float =
     if value > 0 and value < result:
       result = value
 
+proc ratio(value, best: float): float =
+  ## How many times bigger a value is than the best value, or 0 when unknown
+  if best < Inf and value > 0 and value < Inf:
+    value / best
+  else:
+    0.0
+
 proc markWinners(report: var Report) =
   for metric in metricOrder:
     var seconds, bytes: seq[float]
@@ -85,17 +94,18 @@ proc markWinners(report: var Report) =
         seconds.add(suite.measurements[metric].seconds)
         bytes.add(suite.measurements[metric].bytes)
 
-    if seconds.len < 2:
-      continue
-
     let bestTime = best(seconds)
     let bestMem = best(bytes)
 
     for suite in report.suites.mitems:
       if metric in suite.measurements:
         template measured: Measurement = suite.measurements[metric]
-        measured.timeWinner = bestTime < Inf and measured.seconds == bestTime
-        measured.memWinner = bestMem < Inf and measured.bytes == bestMem
+        measured.timeRatio = ratio(measured.seconds, bestTime)
+        measured.memRatio = ratio(measured.bytes, bestMem)
+
+        if seconds.len >= 2:
+          measured.timeWinner = bestTime < Inf and measured.seconds == bestTime
+          measured.memWinner = bestMem < Inf and measured.bytes == bestMem
 
 proc parseFiles*(paths: openArray[string]): Report =
   for path in paths:
